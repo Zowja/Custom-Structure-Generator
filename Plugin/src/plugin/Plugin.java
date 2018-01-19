@@ -43,12 +43,14 @@ public class Plugin extends JavaPlugin {
 			if (file.getName().endsWith(".zip")){
 				
 				try {
-					Structure loadingStruct = new Structure();
-					short worldType;
 
 					ZipFile zipfile = new ZipFile(file);
 					for(Enumeration<? extends ZipEntry> entries = zipfile.entries();
 					        entries.hasMoreElements();){
+
+					Structure loadingStruct = new Structure();
+					short worldType;
+					
 					// Read version
 					Scanner lineReader = new Scanner(zipfile.getInputStream(entries.nextElement()));
 					if (!lineReader.hasNextLine()) {

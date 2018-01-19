@@ -52,14 +52,16 @@ public class GenerateStructures extends WorldListener {
 				continue;
 			}
 			double spawnAttempts = structure.commonality;
+			//Reset seed so that the individual structures are consistent across all seeds.
+			rand = new Random(event.getWorld().getSeed()*event.getChunk().getX()+event.getChunk().getZ());
 			attempt: while (spawnAttempts > 0) {
 				double random = rand.nextDouble();
 				if (random > spawnAttempts) {
 					break attempt;
 				}
+				y = structure.yBottom + rand.nextInt(structure.yTop - structure.yBottom + 1);
 				x = rand.nextInt(16);
 				z = rand.nextInt(16);
-				y = structure.yBottom + rand.nextInt(structure.yTop - structure.yBottom + 1);
 				spawnAttempts--;
 				if (structure.hasInitial) {
 					for (short[] check : structure.initialCheck)
