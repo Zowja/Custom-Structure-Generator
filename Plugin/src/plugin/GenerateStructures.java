@@ -66,6 +66,9 @@ public class GenerateStructures extends WorldListener {
 						if (check[3] > -1) {
 							if (event.getChunk().getBlock(x + check[0], y + check[1], z + check[2]).getTypeId() != check[3])
 								continue attempt;
+							else if(check[4] >= 0 && (event.getChunk().getBlock(x + check[0], y + check[1], z + check[2]).getData() == (byte)check[4])){
+								continue attempt;
+							}
 						} else if (check[3] < -31) {
 							short[] checks = structure.multiChecks.get(-check[3] - 32);
 							boolean checked = false;

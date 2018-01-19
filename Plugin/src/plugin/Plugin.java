@@ -150,21 +150,18 @@ public class Plugin extends JavaPlugin {
 						error(file, "File is incomplete. Stops at: Initial check.");
 						continue;
 					}
-					line = lineReader.nextLine();
+					line = "";
 					short numberOfChecks = 0;
-					if (!line.equals("x")) {
-						numberOfChecks++;
 						while (lineReader.hasNextLine()) {
 							String temp = lineReader.nextLine();
 							if (temp.equals("")) {
 								break;
 							}
-							line += "\n" + temp;
+							line += temp + "\n";
 							numberOfChecks++;
 						}
-					} else {
+					if(numberOfChecks == 0){
 						loadingStruct.hasInitial = false;
-						lineReader.nextLine();
 					}
 					loadingStruct.initialCheck = new short[numberOfChecks][5];
 					scnr = new Scanner(line);
@@ -180,7 +177,7 @@ public class Plugin extends JavaPlugin {
 						if (set.hasNextShort()) {
 							loadingStruct.initialCheck[i][4] = set.nextShort();
 						} else {
-							loadingStruct.initialCheck[i][4] = 0;
+							loadingStruct.initialCheck[i][4] = -1;
 						}
 						set.close();
 
@@ -233,16 +230,11 @@ public class Plugin extends JavaPlugin {
 					}
 
 					// Read Metadata
-					if (!lineReader.hasNext()) {
-						error(file, "File is incomplete. Stops at: Initial check.");
-						continue;
-					}
-					lineReader.nextLine();
-					lineReader.nextLine();
-					line = lineReader.nextLine();
-					numberOfChecks = 0;
-					if (!line.equals("x")) {
-						numberOfChecks++;
+					if (lineReader.hasNextShort()) {
+						lineReader.nextLine();
+						lineReader.nextLine();
+						line = lineReader.nextLine();
+						numberOfChecks = 1;
 						while (lineReader.hasNextLine()) {
 							String temp = lineReader.nextLine();
 							if (temp.equals("")) {
@@ -251,22 +243,21 @@ public class Plugin extends JavaPlugin {
 							line += "\n" + temp;
 							numberOfChecks++;
 						}
-					} else {
-						loadingStruct.hasMeta = false;
-					}
-					loadingStruct.metadata = new short[numberOfChecks][4];
-					scnr = new Scanner(line);
-					for (int i = 0; i < numberOfChecks; i++) {
-						Scanner set = new Scanner(scnr.nextLine());
-						for (int j = 0; j < 4; j++) {
-							if (!set.hasNextShort()) {
-								error(file, "Metadata is not all integers or you are missing numbers");
-								continue;
+						loadingStruct.metadata = new short[numberOfChecks][4];
+						scnr = new Scanner(line);
+						for (int i = 0; i < numberOfChecks; i++) {
+							for (int j = 0; j < 4; j++) {
+								if (!scnr.hasNextShort()) {
+									error(file, "Metadata is not all integers or you are missing numbers");
+									continue;
+								}
+								loadingStruct.metadata[i][j] = scnr.nextShort();
 							}
-							loadingStruct.metadata[i][j] = set.nextShort();
+	
 						}
-						set.close();
-
+					}
+					else {
+						loadingStruct.hasMeta = false;
 					}
 					scnr.close();
 
