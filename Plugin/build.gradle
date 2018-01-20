@@ -1,0 +1,24 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+apply plugin: 'java'
+
+group = project.property("group")
+version = project.property("version")
+
+repositories {
+    jcenter()
+    maven { url 'https://jitpack.io' }
+    flatDir { dirs 'libs' }
+}
+
+dependencies {
+    compile 'com.github.Bukkit:Bukkit:1.7.3-R3'
+    compile name: 'craftbukkit-1060' // for calculating humidity (bukkit api one is in form of unconverted noise octave)
+}
+
+processResources {
+    filter ReplaceTokens, tokens: [
+        'name' : project.property("name"),
+        'version' : project.property("version")
+    ]
+}
