@@ -2,7 +2,7 @@
 
 ## Compiling
 1. Clone repo.
-2. Create floder `/libs/`.
+2. Create folder `/libs/`.
 3. Obtain craftbukkit version 1060 jar, name it `craftbukkit-1060.jar` and put into `libs` folder.
 4. Run command:
 	- on linux/mac: `./gradlew build`,
