@@ -1,5 +1,0 @@
-name: CustomStructures
-main: plugin.Plugin
-version: 1.0
-load: STARTUP
-commands:

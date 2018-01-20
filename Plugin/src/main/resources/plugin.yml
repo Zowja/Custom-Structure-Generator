@@ -1,0 +1,5 @@
+name: @name@
+main: plugin.Plugin
+version: @version@
+load: STARTUP
+commands:
