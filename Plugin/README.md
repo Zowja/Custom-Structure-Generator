@@ -1,0 +1,10 @@
+# CustomStructures Bukkit Plugin
+
+## Compiling
+1. Clone repo.
+2. Create floder `/libs/`.
+3. Obtain craftbukkit version 1060 jar, name it `craftbukkit-1060.jar` and put into `libs` folder.
+4. Run command:
+	- for linux/mac `./gradlew build`,
+	- for windows `gradlew.bat build`.
+5. Compiled plugin jar will be created in `/build/libs/` folder.
