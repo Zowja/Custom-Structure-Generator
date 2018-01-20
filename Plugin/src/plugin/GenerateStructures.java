@@ -3,7 +3,6 @@ package plugin;
 import java.util.ArrayList;
 import java.util.Random;
 
-import org.bukkit.Chunk;
 import org.bukkit.block.ContainerBlock;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.event.world.ChunkPopulateEvent;
@@ -60,21 +59,21 @@ public class GenerateStructures extends WorldListener {
 					break attempt;
 				}
 				y = structure.yBottom + rand.nextInt(structure.yTop - structure.yBottom + 1);
-				x = rand.nextInt(16);
-				z = rand.nextInt(16);
+				x = rand.nextInt(16) + event.getChunk().getX()*16;
+				z = rand.nextInt(16) + event.getChunk().getZ()*16;
 				spawnAttempts--;
 				if (structure.hasInitial) {
 					for (short[] check : structure.initialCheck)
 						if (check[3] > -1) {
-							if (event.getChunk().getBlock(x + check[0], y + check[1], z + check[2]).getTypeId() != check[3])
+							if (event.getWorld().getBlockAt(x + check[0], y + check[1], z + check[2]).getTypeId() != check[3])
 								continue attempt;
-							else if(check[4] >= 0 && (event.getChunk().getBlock(x + check[0], y + check[1], z + check[2]).getData() == (byte)check[4])){
+							else if(check[4] >= 0 && (event.getWorld().getBlockAt(x + check[0], y + check[1], z + check[2]).getData() == (byte)check[4])){
 								continue attempt;
 							}
 						} else if (check[3] < -31) {
 							short[] checks = structure.multiChecks.get(-check[3] - 32);
 							boolean checked = false;
-							int blockID = event.getChunk().getBlock(x + check[0], y + check[1], z + check[2]).getTypeId();
+							int blockID = event.getWorld().getBlockAt(x + check[0], y + check[1], z + check[2]).getTypeId();
 							for (int innerCheck : checks) {
 								if (innerCheck == blockID) {
 									checked = true;
@@ -90,13 +89,13 @@ public class GenerateStructures extends WorldListener {
 						for (int yy = 0; yy < structure.deepCheck[xx].length; yy++) {
 							for (int zz = 0; zz < structure.deepCheck[xx][yy].length; zz++) {
 								if (structure.deepCheck[xx][yy][zz] > -1) {
-									if (event.getChunk().getBlock(x + xx, y + yy, z + zz).getTypeId() != structure.deepCheck[xx][yy][zz]) {
+									if (event.getWorld().getBlockAt(x + xx, y + yy, z + zz).getTypeId() != structure.deepCheck[xx][yy][zz]) {
 										continue attempt;
 									}
 								} else if (structure.deepCheck[xx][yy][zz] < -31) {
 									short[] checks = structure.multiChecks.get(-structure.deepCheck[xx][yy][zz] - 32);
 									boolean checked = false;
-									int blockID = event.getChunk().getBlock(x + xx, y + yy, z + zz).getTypeId();
+									int blockID = event.getWorld().getBlockAt(x + xx, y + yy, z + zz).getTypeId();
 									for (int innerCheck : checks) {
 										if (innerCheck == blockID) {
 											checked = true;
@@ -114,7 +113,7 @@ public class GenerateStructures extends WorldListener {
 					for (int yy = 0; yy < structure.structure[xx].length; yy++) {
 						for (int zz = 0; zz < structure.structure[xx][yy].length; zz++) {
 							if (structure.structure[xx][yy][zz] > -1)
-								event.getChunk().getBlock(x + xx, y + yy, z + zz).setTypeId(structure.structure[xx][yy][zz]);
+								event.getWorld().getBlockAt(x + xx, y + yy, z + zz).setTypeId(structure.structure[xx][yy][zz]);
 
 							else if (structure.structure[xx][yy][zz] < -31) {
 								if (structure.structure[xx][yy][zz] > -structure.randoms.size() - 32) {
@@ -130,21 +129,21 @@ public class GenerateStructures extends WorldListener {
 										total += randomNumSet.weight[loop];
 									}
 									if (result > -1) {
-										event.getChunk().getBlock(x + xx, y + yy, z + zz).setTypeId(result);
+										event.getWorld().getBlockAt(x + xx, y + yy, z + zz).setTypeId(result);
 									} else if (result > -structure.chests.size() - structure.randoms.size() - 32) {
-										generateChest(x + xx, y + yy, z + zz, result, rand, structure, event.getChunk());
+										generateChest(x + xx, y + yy, z + zz, result, rand, structure, event);
 									} else if (result > -structure.spawners.size() - structure.chests.size()
 											- structure.randoms.size() - 32) {
-										generateSpawner(x + xx, y + yy, z + zz, result, rand, structure, event.getChunk());
+										generateSpawner(x + xx, y + yy, z + zz, result, rand, structure, event);
 									}
 								} else if (structure.structure[xx][yy][zz] > -structure.chests.size()
 										- structure.randoms.size() - 32) {
 									generateChest(x + xx, y + yy, z + zz, structure.structure[xx][yy][zz], rand,
-											structure, event.getChunk());
+											structure, event);
 								} else if (structure.structure[xx][yy][zz] > -structure.spawners.size()
 										- structure.chests.size() - structure.randoms.size() - 32) {
 									generateSpawner(x + xx, y + yy, z + zz, structure.structure[xx][yy][zz], rand,
-											structure, event.getChunk());
+											structure, event);
 								}
 							}
 						}
@@ -152,16 +151,16 @@ public class GenerateStructures extends WorldListener {
 				}
 				if (structure.hasMeta) {
 					for (short[] meta : structure.metadata) {
-						event.getChunk().getBlock(meta[0] + x, meta[1] + y, meta[2] + z).setData((byte) meta[3]);;
+						event.getWorld().getBlockAt(meta[0] + x, meta[1] + y, meta[2] + z).setData((byte) meta[3]);;
 					}
 				}
 			}
 		}
 	}
 	
-	public static void generateChest(int x, int y, int z, int id, Random rand, Structure structure, Chunk chunk) {
-		chunk.getBlock(x, y, z).setTypeId(54);
-		Inventory inventory = ((ContainerBlock)chunk.getBlock(x, y, z).getState()).getInventory();
+	public static void generateChest(int x, int y, int z, int id, Random rand, Structure structure, ChunkPopulateEvent event) {
+		event.getWorld().getBlockAt(x, y, z).setTypeId(54);
+		Inventory inventory = ((ContainerBlock)event.getWorld().getBlockAt(x, y, z).getState()).getInventory();
 		int l2 = 0;
 		Structure.lootChest chest = structure.chests.get(-id - structure.randoms.size() - 32);
 		ArrayList<Integer> openSlots = new ArrayList<Integer>();
@@ -193,8 +192,8 @@ public class GenerateStructures extends WorldListener {
 		}
 	}
 
-	public static void generateSpawner(int x, int y, int z, int id, Random rand, Structure structure, Chunk chunk) {
-		chunk.getBlock(x, y, z).setTypeId(52);
+	public static void generateSpawner(int x, int y, int z, int id, Random rand, Structure structure, ChunkPopulateEvent event) {
+		event.getWorld().getBlockAt(x, y, z).setTypeId(52);
 		Structure.Spawner spawner = structure.spawners
 				.get(-id - structure.chests.size() - structure.randoms.size() - 32);
 		int roll = rand.nextInt(spawner.totalweight);
@@ -207,7 +206,7 @@ public class GenerateStructures extends WorldListener {
 			}
 			total += spawner.weights.get(loop);
 		}
-		((CreatureSpawner)chunk.getBlock(x, y, z).getState()).setCreatureTypeId(mobID);
+		((CreatureSpawner)event.getWorld().getBlockAt(x, y, z).getState()).setCreatureTypeId(mobID);
 		
 	}
 
