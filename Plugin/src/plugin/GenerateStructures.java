@@ -16,7 +16,7 @@ public class GenerateStructures extends WorldListener {
 	
 	public void onChunkPopulate(ChunkPopulateEvent event){
 		Random rand = new Random(event.getWorld().getSeed()*event.getChunk().getX()+event.getChunk().getZ());
-		NoiseGeneratorOctaves2 humOctave = new NoiseGeneratorOctaves2(new Random(event.getWorld().getSeed() * 9871L), 4);
+		NoiseGeneratorOctaves2 humOctave = new NoiseGeneratorOctaves2(new Random(event.getWorld().getSeed() * 39811L), 4);
 		NoiseGeneratorOctaves2 extraOctave = new NoiseGeneratorOctaves2(new Random(event.getWorld().getSeed() * 543321L), 2);
 		int x = rand.nextInt(16);
 		int z = rand.nextInt(16);
@@ -52,7 +52,7 @@ public class GenerateStructures extends WorldListener {
 			}
 			double spawnAttempts = structure.commonality;
 			//Reset seed so that the individual structures are consistent across all seeds.
-			rand = new Random(event.getWorld().getSeed()*event.getChunk().getX()+event.getChunk().getZ());
+			rand = new Random(event.getWorld().getSeed()*event.getChunk().getX()+event.getChunk().getZ()+structure.random);
 			attempt: while (spawnAttempts > 0) {
 				double random = rand.nextDouble();
 				if (random > spawnAttempts) {
