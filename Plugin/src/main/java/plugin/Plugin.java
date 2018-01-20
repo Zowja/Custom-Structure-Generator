@@ -50,9 +50,13 @@ public class Plugin extends JavaPlugin {
 
 					Structure loadingStruct = new Structure();
 					short worldType;
+					ZipEntry zip = entries.nextElement();
+					
+					// Setup random
+					loadingStruct.random = (zip.getName()+file.getName()).hashCode();
 					
 					// Read version
-					Scanner lineReader = new Scanner(zipfile.getInputStream(entries.nextElement()));
+					Scanner lineReader = new Scanner(zipfile.getInputStream(zip));
 					if (!lineReader.hasNextLine()) {
 						error(file, "There is nothing in the file.");
 						continue;

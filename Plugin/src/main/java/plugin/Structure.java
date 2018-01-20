@@ -21,6 +21,7 @@ public class Structure {
 	public ArrayList<Spawner> spawners;
 	public ArrayList<short[]> multiChecks;
 	public short type;
+	public int random;
 	
 	public lootChest getNewChest(){
 		chests.add(new lootChest());
