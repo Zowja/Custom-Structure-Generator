@@ -4,7 +4,7 @@ Note: The code is currently poorly commented, and the exception handling and org
 
 Version History:
 1.1
-Added soft dependency on WorldEdit such that structures can be taken from a selection in world edit then exported into a document for the structure generator
+Added soft dependency on WorldEdit such that structures can be taken from a selection in world edit then exported into a document for the structure generator. Also fixed it not generating at spawn.
 
 1.0
 Release, but not without a bunch of bug fixes later
