@@ -14,6 +14,7 @@ repositories {
 dependencies {
     compile 'com.github.Bukkit:Bukkit:1.7.3-R3'
     compile name: 'craftbukkit-1060' // for calculating humidity (bukkit api one is in form of unconverted noise octave)
+    compile name: 'worldedit-4.6'
 }
 
 processResources {

@@ -28,6 +28,7 @@ public class Plugin extends JavaPlugin {
 		loadStructures();
 		getServer().getPluginManager().registerEvent(Event.Type.CHUNK_POPULATED, new GenerateStructures(), Event.Priority.High, this);
 		getServer().getLogger().info("Loaded Custom Structures.");
+		this.getCommand("customstructures").setExecutor(new CustomStructuresCommand(this));
 	}
 	
 	public void loadStructures() {

@@ -1,5 +1,8 @@
 name: @name@
 main: plugin.Plugin
 version: @version@
+softdepend: [WorldEdit]
 load: STARTUP
 commands:
+  customstructures:
+    aliases: [cstruct]
