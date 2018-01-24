@@ -13,9 +13,12 @@ import org.bukkit.inventory.ItemStack;
 import net.minecraft.server.NoiseGeneratorOctaves2;
 
 public class GenerateStructures extends WorldListener {
-	
+
+	private final Random rand = new Random();
+
 	public void onChunkPopulate(ChunkPopulateEvent event){
-		Random rand = new Random(event.getWorld().getSeed()*event.getChunk().getX()+event.getChunk().getZ());
+		final long baseSeed = event.getWorld().getSeed()*event.getChunk().getX()+event.getChunk().getZ();
+		rand.setSeed(baseSeed);
 		int x = rand.nextInt(16);
 		int z = rand.nextInt(16);
 		int y;
@@ -39,7 +42,7 @@ public class GenerateStructures extends WorldListener {
 			}
 			double spawnAttempts = structure.commonality;
 			//Reset seed so that the individual structures are consistent across all seeds.
-			rand = new Random(event.getWorld().getSeed()*event.getChunk().getX()+event.getChunk().getZ()+structure.random);
+			rand.setSeed(baseSeed + structure.random);
 			attempt: while (spawnAttempts > 0) {
 				double random = rand.nextDouble();
 				if (random > spawnAttempts) {
