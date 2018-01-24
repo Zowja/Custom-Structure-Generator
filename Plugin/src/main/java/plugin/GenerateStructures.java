@@ -16,26 +16,13 @@ public class GenerateStructures extends WorldListener {
 	
 	public void onChunkPopulate(ChunkPopulateEvent event){
 		Random rand = new Random(event.getWorld().getSeed()*event.getChunk().getX()+event.getChunk().getZ());
-		NoiseGeneratorOctaves2 humOctave = new NoiseGeneratorOctaves2(new Random(event.getWorld().getSeed() * 39811L), 4);
-		NoiseGeneratorOctaves2 extraOctave = new NoiseGeneratorOctaves2(new Random(event.getWorld().getSeed() * 543321L), 2);
 		int x = rand.nextInt(16);
 		int z = rand.nextInt(16);
 		int y;
-		double[] humid = null;
-		double[] extra = null;
-		humid = humOctave.a(humid, (double) x + (event.getChunk().getX()*16), (double) z + (event.getChunk().getZ()*16), 1, 1, 0.05000000074505806D, 0.05000000074505806D, 0.3333333333333333D);
-		extra = extraOctave.a(extra, (double) x + (event.getChunk().getX()*16), (double) z + (event.getChunk().getZ()*16), 1, 1, 0.25D, 0.25D, 0.5882352941176471D);
-		
+
 		double temp = event.getWorld().getTemperature(x + (event.getChunk().getX()*16), z + (event.getChunk().getZ()*16)) * 100;
-		double humidity = ((humid[0] * 0.15D + 0.5D) * 0.998 + (extra[0] * 1.1D + 0.5D) * 0.002)*100;
-		if(humidity < 0.0D)
-        {
-           humidity = 0.0D;
-        }
-		if(humidity > 100.0D)
-        {
-			humidity = 100.0D;
-        }
+		double humidity = this.getHumidity(event.getWorld().getSeed(), x + event.getChunk().getX()*16, z + event.getChunk().getZ()*16);
+
 		for (Structure structure : Plugin.structures) {
 			if(structure.type == 1 && event.getWorld().getEnvironment().getId() != 0){
 				continue;
@@ -156,6 +143,19 @@ public class GenerateStructures extends WorldListener {
 				}
 			}
 		}
+	}
+
+	private double getHumidity(final long seed, final int x, final int z) {
+		final NoiseGeneratorOctaves2 humOctave = new NoiseGeneratorOctaves2(new Random(seed * 39811L), 4);
+		final NoiseGeneratorOctaves2 extraOctave = new NoiseGeneratorOctaves2(new Random(seed * 543321L), 2);
+		double[] humid = null;
+		double[] extra = null;
+		humid = humOctave.a(humid, (double) x, (double) z, 1, 1, 0.05000000074505806D, 0.05000000074505806D, 0.3333333333333333D);
+		extra = extraOctave.a(extra, (double) x, (double) z, 1, 1, 0.25D, 0.25D, 0.5882352941176471D);
+		double humidity = ((humid[0] * 0.15D + 0.5D) * 0.998 + (extra[0] * 1.1D + 0.5D) * 0.002)*100;
+		if(humidity < 0.0D) humidity = 0.0D;
+		if(humidity > 100.0D) humidity = 100.0D;
+		return humidity;
 	}
 	
 	public static void generateChest(int x, int y, int z, int id, Random rand, Structure structure, ChunkPopulateEvent event) {
