@@ -10,7 +10,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.event.Event;
 import plugin.structure.Structure;
 
-public class Plugin extends JavaPlugin {
+public class CustomStructuresPlugin extends JavaPlugin {
 	
 	public static final Set<Structure> structures = new HashSet<>();
 	private final StructureLoader loader = new StructureLoader();

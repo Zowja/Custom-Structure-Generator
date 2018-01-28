@@ -31,7 +31,7 @@ public class GenerateStructures extends WorldListener {
 		double temp = event.getWorld().getTemperature(x + (event.getChunk().getX()*16), z + (event.getChunk().getZ()*16)) * 100;
 		double humidity = this.getHumidity(event.getWorld().getSeed(), x + event.getChunk().getX()*16, z + event.getChunk().getZ()*16);
 
-		for (Structure structure : Plugin.structures) {
+		for (Structure structure : CustomStructuresPlugin.structures) {
 			if(structure.worldType == 1 && event.getWorld().getEnvironment().getId() != 0){
 				continue;
 			}

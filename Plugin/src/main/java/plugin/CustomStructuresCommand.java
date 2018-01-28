@@ -25,9 +25,9 @@ import java.util.List;
 public final class CustomStructuresCommand implements CommandExecutor {
 
 	private final String PREFIX = ChatColor.YELLOW + "[cstruct] " + ChatColor.WHITE;
-	private final Plugin plugin;
+	private final CustomStructuresPlugin plugin;
 
-	CustomStructuresCommand(final Plugin plugin) {
+	CustomStructuresCommand(final CustomStructuresPlugin plugin) {
 		this.plugin = plugin;
 	}
 
