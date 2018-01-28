@@ -11,7 +11,7 @@ import org.bukkit.event.Event;
 
 public class Plugin extends JavaPlugin {
 	
-	public static HashSet<Structure> structures;
+	public static final Set<Structure> structures = new HashSet<>();
 	private final StructureLoader loader = new StructureLoader();
 
 	@Override
@@ -19,7 +19,6 @@ public class Plugin extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
-		structures = new HashSet<Structure>();
 		this.loadStructures();
 		this.getServer().getPluginManager().registerEvent(Event.Type.CHUNK_POPULATED, new GenerateStructures(), Event.Priority.High, this);
 		this.getServer().getLogger().info("Loaded Custom Structures.");
