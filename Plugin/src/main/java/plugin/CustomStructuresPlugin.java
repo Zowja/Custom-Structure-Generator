@@ -2,13 +2,19 @@ package plugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.bukkit.event.world.WorldListener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.event.Event;
 import plugin.command.CustomStructuresCommand;
+import plugin.generator.WorldInitEventExecutor;
 import plugin.structure.Structure;
 
 public class CustomStructuresPlugin extends JavaPlugin {
@@ -21,9 +27,14 @@ public class CustomStructuresPlugin extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
+		this.saveDefaultConfig();
+		this.getConfiguration().load();
+
 		this.loadStructures();
-		this.getServer().getPluginManager().registerEvent(Event.Type.CHUNK_POPULATED, new GenerateStructures(), Event.Priority.High, this);
 		this.getServer().getLogger().info("[CS] Loaded " + structures.size() + " Custom Structures.");
+
+		this.getServer().getPluginManager().registerEvent(Event.Type.WORLD_INIT, new WorldListener(), new WorldInitEventExecutor(this), Event.Priority.High, this);
+
 		this.getCommand("customstructures").setExecutor(new CustomStructuresCommand(this));
 	}
 	
@@ -38,6 +49,33 @@ public class CustomStructuresPlugin extends JavaPlugin {
 				if (loadedStructures != null)
 					structures.addAll(loadedStructures);
 			} catch (final IOException ignored) { }
+		}
+	}
+
+	private void saveDefaultConfig() {
+		final File configFile = new File(this.getDataFolder(), "config.yml");
+		if (!configFile.exists()) {
+			try {
+				final InputStream in = this.getResource("config.yml");
+				if (in == null) return;
+				Files.copy(in, configFile.toPath());
+				in.close();
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+
+	private InputStream getResource(final String filename) {
+		try {
+			final URL url = getClassLoader().getResource(filename);
+			if (url == null) return null;
+			final URLConnection connection = url.openConnection();
+			connection.setUseCaches(false);
+			return connection.getInputStream();
+		} catch (final IOException e) {
+			return null;
 		}
 	}
 
