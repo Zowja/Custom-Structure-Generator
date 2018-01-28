@@ -14,10 +14,7 @@ public class Plugin extends JavaPlugin {
 	private final StructureLoader loader = new StructureLoader();
 
 	@Override
-	public void onDisable() {
-		// TODO Auto-generated method stub
-		
-	}
+	public void onDisable() { }
 
 	@Override
 	public void onEnable() {
