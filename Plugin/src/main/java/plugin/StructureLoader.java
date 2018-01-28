@@ -2,6 +2,9 @@ package plugin;
 
 import javafx.util.Pair;
 import org.bukkit.Bukkit;
+import plugin.structure.LootChest;
+import plugin.structure.Spawner;
+import plugin.structure.Structure;
 
 import java.io.File;
 import java.io.IOException;
@@ -523,7 +526,7 @@ public class StructureLoader {
                     warn(name, lineNum, "Amount value in chest declaration is to large. Falling back to 27 (max value).");
                     amount = 27;
                 }
-                final Structure.LootChest chest = struct.getNewChest();
+                final LootChest chest = struct.getNewChest();
                 chest.numOfLoot = amount;
                 int chestLineNum = 1;
                 while (!lines.get(lineNum-1+chestLineNum).isEmpty()) {
@@ -578,7 +581,7 @@ public class StructureLoader {
                 if (spawnerValues.isEmpty()) {
                     warn(name, lineNum, "Spawner is empty. Ignoring it.");
                 } else {
-                    final Structure.Spawner spawner = struct.getNewSpawner();
+                    final Spawner spawner = struct.getNewSpawner();
                     spawnerValues.forEach(entry -> {
                         spawner.mobIDs.add(entry.getKey());
                         spawner.weights.add(entry.getValue());

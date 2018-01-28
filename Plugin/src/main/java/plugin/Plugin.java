@@ -8,6 +8,7 @@ import java.util.Set;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.event.Event;
+import plugin.structure.Structure;
 
 public class Plugin extends JavaPlugin {
 	

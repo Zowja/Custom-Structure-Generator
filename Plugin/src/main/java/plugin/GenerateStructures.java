@@ -12,6 +12,10 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import net.minecraft.server.NoiseGeneratorOctaves2;
+import plugin.structure.LootChest;
+import plugin.structure.RandomNumberSet;
+import plugin.structure.Spawner;
+import plugin.structure.Structure;
 
 public class GenerateStructures extends WorldListener {
 
@@ -108,7 +112,7 @@ public class GenerateStructures extends WorldListener {
 
 							else if (structure.structure[xx][yy][zz] < -31) {
 								if (structure.structure[xx][yy][zz] > -structure.randoms.size() - 32) {
-									Structure.RandomNumberSet randomNumSet = structure.randoms
+									RandomNumberSet randomNumSet = structure.randoms
 											.get(-structure.structure[xx][yy][zz] - 32);
 									int roll = rand.nextInt(randomNumSet.totalRandomWeight);
 									int total = 0, result = 0;
@@ -167,7 +171,7 @@ public class GenerateStructures extends WorldListener {
 		final Inventory inventory = ((ContainerBlock)event.getWorld().getBlockAt(x, y, z).getState()).getInventory();
 		final List<Integer> emptySlots = new ArrayList<>();
 		IntStream.range(0, inventory.getSize()).forEach(emptySlots::add);
-		final Structure.LootChest chest = structure.chests.get(-id - structure.randoms.size() - 32);
+		final LootChest chest = structure.chests.get(-id - structure.randoms.size() - 32);
 		for (final ItemStack item : chest.getLoot(rand)) {
 			final int slot = rand.nextInt(emptySlots.size());
 			inventory.setItem(slot, item);
@@ -177,7 +181,7 @@ public class GenerateStructures extends WorldListener {
 
 	public static void generateSpawner(int x, int y, int z, int id, Random rand, Structure structure, ChunkPopulateEvent event) {
 		event.getWorld().getBlockAt(x, y, z).setTypeId(52);
-		Structure.Spawner spawner = structure.spawners
+		Spawner spawner = structure.spawners
 				.get(-id - structure.chests.size() - structure.randoms.size() - 32);
 		int roll = rand.nextInt(spawner.totalweight);
 		int total = 0;
