@@ -168,10 +168,10 @@ public class StructureLoader {
 
     private void readWorldType(final Structure struct, final String name, final int lineNum, final String line) {
         try {
-            struct.type = Short.parseShort(line);
+            struct.worldType = Short.parseShort(line);
         } catch (final NumberFormatException e) {
             warn(name, lineNum, "Invalid worldType. Falling back to default 0.");
-            struct.type = 0;
+            struct.worldType = 0;
         }
     }
 
@@ -491,15 +491,13 @@ public class StructureLoader {
                 if (randomValues.isEmpty()) {
                     warn(name, lineNum, "random is empty. Ignoring it.");
                 } else {
-                    int totalWeight = 0;
                     int[] weight = new int[randomValues.size()];
                     int[] ids = new int[randomValues.size()];
                     for (int i=0; i < randomValues.size(); i++) {
                         ids[i] = randomValues.get(i)[0];
                         weight[i] = randomValues.get(i)[1];
-                        totalWeight += randomValues.get(i)[1];
                     }
-                    struct.createNewRandom(ids, weight, totalWeight);
+                    struct.createNewRandom(ids, weight);
                     this.neededRandomsChestsSpawners--;
                 }
                 lineNum += randomLineNum;
@@ -525,7 +523,7 @@ public class StructureLoader {
                     warn(name, lineNum, "Amount value in chest declaration is to large. Falling back to 27 (max value).");
                     amount = 27;
                 }
-                final Structure.lootChest chest = struct.getNewChest();
+                final Structure.LootChest chest = struct.getNewChest();
                 chest.numOfLoot = amount;
                 int chestLineNum = 1;
                 while (!lines.get(lineNum-1+chestLineNum).isEmpty()) {

@@ -1,8 +1,9 @@
 package plugin;
 
-import java.util.ArrayList;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.IntStream;
 
+import org.bukkit.Material;
 import org.bukkit.block.ContainerBlock;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.event.world.ChunkPopulateEvent;
@@ -27,13 +28,13 @@ public class GenerateStructures extends WorldListener {
 		double humidity = this.getHumidity(event.getWorld().getSeed(), x + event.getChunk().getX()*16, z + event.getChunk().getZ()*16);
 
 		for (Structure structure : Plugin.structures) {
-			if(structure.type == 1 && event.getWorld().getEnvironment().getId() != 0){
+			if(structure.worldType == 1 && event.getWorld().getEnvironment().getId() != 0){
 				continue;
 			}
-			if(structure.type == 2 && event.getWorld().getEnvironment().getId() != -1){
+			if(structure.worldType == 2 && event.getWorld().getEnvironment().getId() != -1){
 				continue;
 			}
-			if(structure.type == 3 && event.getWorld().getEnvironment().getId() != 1){
+			if(structure.worldType == 3 && event.getWorld().getEnvironment().getId() != 1){
 				continue;
 			}
 			if (structure.hasBiome && (temp > structure.topTemp || temp < structure.lowTemp
@@ -107,7 +108,7 @@ public class GenerateStructures extends WorldListener {
 
 							else if (structure.structure[xx][yy][zz] < -31) {
 								if (structure.structure[xx][yy][zz] > -structure.randoms.size() - 32) {
-									Structure.randomNumberSet randomNumSet = structure.randoms
+									Structure.RandomNumberSet randomNumSet = structure.randoms
 											.get(-structure.structure[xx][yy][zz] - 32);
 									int roll = rand.nextInt(randomNumSet.totalRandomWeight);
 									int total = 0, result = 0;
@@ -162,36 +163,15 @@ public class GenerateStructures extends WorldListener {
 	}
 	
 	public static void generateChest(int x, int y, int z, int id, Random rand, Structure structure, ChunkPopulateEvent event) {
-		event.getWorld().getBlockAt(x, y, z).setTypeId(54);
-		Inventory inventory = ((ContainerBlock)event.getWorld().getBlockAt(x, y, z).getState()).getInventory();
-		int l2 = 0;
-		Structure.lootChest chest = structure.chests.get(-id - structure.randoms.size() - 32);
-		ArrayList<Integer> openSlots = new ArrayList<Integer>();
-		for (int slots = 0; slots < inventory.getSize(); slots++) {
-			openSlots.add(slots);
-		}
-		while (true) {
-			if (l2 >= chest.numOfLoot) {
-				break;
-			}
-			int roll = rand.nextInt(chest.totalweight);
-			int total = 0;
-			Structure.lootItem item = null;
-			for (int loop = 0; loop < chest.loot.size(); loop++) {
-				item = chest.loot.get(loop);
-				if (total + item.weight > roll) {
-					break;
-				}
-				total += item.weight;
-			}
-			if (item != null) {
-				int slot = rand.nextInt(openSlots.size());
-				inventory.setItem(openSlots.get(slot),
-						new ItemStack(item.itemID, rand.nextInt(item.numberInStack) + 1, item.metadata));
-				openSlots.remove(slot);
-			}
-
-			++l2;
+		event.getWorld().getBlockAt(x, y, z).setType(Material.CHEST);
+		final Inventory inventory = ((ContainerBlock)event.getWorld().getBlockAt(x, y, z).getState()).getInventory();
+		final List<Integer> emptySlots = new ArrayList<>();
+		IntStream.range(0, inventory.getSize()).forEach(emptySlots::add);
+		final Structure.LootChest chest = structure.chests.get(-id - structure.randoms.size() - 32);
+		for (final ItemStack item : chest.getLoot(rand)) {
+			final int slot = rand.nextInt(emptySlots.size());
+			inventory.setItem(slot, item);
+			emptySlots.remove(slot);
 		}
 	}
 

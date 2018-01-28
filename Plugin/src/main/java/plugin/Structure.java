@@ -1,89 +1,102 @@
 package plugin;
 
+import org.bukkit.inventory.ItemStack;
+
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Random;
 
 public class Structure {
-	
-	public Structure(){
-		chests = new ArrayList<lootChest>();
-		randoms = new ArrayList<randomNumberSet>();
-		spawners = new ArrayList<Spawner>();
-		multiChecks = new ArrayList<short[]>();
-	}
-	
-	public short[][] initialCheck, metadata;
-	public short[][][] deepCheck, structure;
-	public double topTemp, lowTemp, topHumidity, lowHumidity, commonality;
-	public boolean hasBiome = true, hasInitial = true, hasDeep = true, hasMeta = true;
-	public short yTop, yBottom;
-	public ArrayList<lootChest> chests;
-	public ArrayList<randomNumberSet> randoms;
-	public ArrayList<Spawner> spawners;
-	public ArrayList<short[]> multiChecks;
-	public short type;
+
 	public int random;
-	
-	public lootChest getNewChest(){
-		chests.add(new lootChest());
-		return chests.get(chests.size() - 1);
+	public boolean hasBiome = true, hasInitial = true, hasDeep = true, hasMeta = true;
+
+	public short worldType;
+	public double topTemp, lowTemp, topHumidity, lowHumidity;
+	public double commonality;
+	public short yTop, yBottom;
+	public short[][] initialCheck;
+	public short[][][] deepCheck;
+	public short[][][] structure;
+	public short[][] metadata;
+	public final List<short[]> multiChecks = new ArrayList<>();
+	public final List<LootChest> chests = new ArrayList<>();
+	public final List<RandomNumberSet> randoms = new ArrayList<>();
+	public final List<Spawner> spawners = new ArrayList<>();
+
+	public LootChest getNewChest() {
+		this.chests.add(new LootChest());
+		return this.chests.get(this.chests.size() - 1);
 	}
-	
-	public Spawner getNewSpawner(){
-		spawners.add(new Spawner());
-		return spawners.get(spawners.size() - 1);
+
+	public Spawner getNewSpawner() {
+		this.spawners.add(new Spawner());
+		return this.spawners.get(this.spawners.size() - 1);
 	}
-	
-	public void createNewRandom(int[] number, int[] weight, int totalweight){
-		randoms.add(new randomNumberSet(weight, number, totalweight));
+
+	public void createNewRandom(int[] number, int[] weight) {
+		this.randoms.add(new RandomNumberSet(weight, number));
 	}
-	
-	class lootChest {
-		
-		public lootChest(){
-			loot = new ArrayList<lootItem>();
-		}
-		
-		public void addLoot(short item, short meta, short num, short weight){
-			lootItem loot = new lootItem();
+
+	class LootChest {
+		private int totalweight;
+		public short numOfLoot;
+		public List<LootItem> loot = new ArrayList<>();
+
+		public void addLoot(final short item, final short meta, final short num, final short weight) {
+			final LootItem loot = new LootItem();
 			loot.itemID = item;
 			loot.metadata = meta;
 			loot.numberInStack = num;
 			loot.weight = weight;
-			totalweight += weight;
+			this.totalweight += weight;
 			this.loot.add(loot);
 		}
-		
-		int totalweight;
-		public short numOfLoot;
-		public ArrayList<lootItem> loot;
-	}
-	
-	class lootItem {
-		public short itemID, metadata, numberInStack, weight;
-	}
-	
-	class Spawner {
-		
-		public Spawner(){
-			mobIDs = new ArrayList<String>();
-			weights = new ArrayList<Short>();
+
+		public Collection<ItemStack> getLoot(final Random rand) {
+			final Collection<ItemStack> items = new ArrayList<>();
+			for (int i = 0; i < this.numOfLoot; i++) {
+				final LootItem item = this.getSingleLootItem(rand);
+				items.add(new ItemStack(item.itemID, rand.nextInt(item.numberInStack) + 1, item.metadata));
+			}
+			return items;
 		}
-		
-		public ArrayList<String> mobIDs;
-		public ArrayList<Short> weights;
-		public int totalweight;
+
+		private LootItem getSingleLootItem(final Random rand) {
+			final int roll = rand.nextInt(this.totalweight) + 1;
+			int total = 0;
+			LootItem lootItem = null;
+			for (final LootItem item : this.loot) {
+				lootItem = item;
+				if (total + item.weight > roll)
+					break;
+				total += item.weight;
+			}
+			return lootItem;
+		}
 	}
-	
-	class randomNumberSet {
-		
-		public randomNumberSet(int[] weight, int[] number, int totalWeight){
+
+	class LootItem {
+		short itemID, metadata, numberInStack, weight;
+	}
+
+	class Spawner {
+		final List<String> mobIDs = new ArrayList<>();
+		final List<Short> weights = new ArrayList<>();
+		int totalweight;
+	}
+
+	class RandomNumberSet {
+		final int[] weight, number;
+		final int totalRandomWeight;
+
+		RandomNumberSet(final int[] weight, final int[] number){
 			this.weight = weight;
 			this.number = number;
-			totalRandomWeight = totalWeight;
+			this.totalRandomWeight = Arrays.stream(weight).sum();
 		}
-		
-		int[] weight, number;
-		int totalRandomWeight;
 	}
 
 }
