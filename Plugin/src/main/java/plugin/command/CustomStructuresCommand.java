@@ -1,4 +1,4 @@
-package plugin;
+package plugin.command;
 
 import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.Vector;
@@ -12,6 +12,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
+import plugin.CustomStructuresPlugin;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,7 +28,7 @@ public final class CustomStructuresCommand implements CommandExecutor {
 	private final String PREFIX = ChatColor.YELLOW + "[cstruct] " + ChatColor.WHITE;
 	private final CustomStructuresPlugin plugin;
 
-	CustomStructuresCommand(final CustomStructuresPlugin plugin) {
+	public CustomStructuresCommand(final CustomStructuresPlugin plugin) {
 		this.plugin = plugin;
 	}
 
