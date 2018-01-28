@@ -1,6 +1,7 @@
 package plugin;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
@@ -28,10 +29,8 @@ public class Plugin extends JavaPlugin {
 	public void loadStructures() {
 		File structDir = getDataFolder();
 		structDir.mkdirs();
-		File[] structureFiles = structDir.listFiles();
-		if (structureFiles == null) {
-			return;
-		}
+		File[] structureFiles = structDir.listFiles((file, name) -> name.toLowerCase().endsWith(".zip"));
+		if (structureFiles == null || structureFiles.length == 0) return;
 		for (File file : structureFiles) {
 			try {
 				final Collection<Structure> loadedStructures = this.loader.loadFromFile(file);
