@@ -65,7 +65,10 @@ public final class CustomStructuresCommand implements CommandExecutor {
         final Player player = (Player) sender;
 
         final String name = args[1];
-        final String worldType = String.valueOf(player.getWorld().getEnvironment().getId());
+        final String worldType;
+        if (player.getWorld().getEnvironment().getId() == -1) worldType = "2";
+        else if (player.getWorld().getEnvironment().getId() == 1) worldType = "3";
+        else worldType = "1";
         final String triesPerChunk = args[2];
 
         // hook into WorldEdit to get selection region
