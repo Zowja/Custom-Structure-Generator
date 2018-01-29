@@ -44,11 +44,9 @@ public class CustomStructuresPlugin extends JavaPlugin {
 		final File[] structureFiles = structDir.listFiles((file, name) -> name.toLowerCase().endsWith(".zip"));
 		if (structureFiles == null || structureFiles.length == 0) return;
 		for (final File file : structureFiles) {
-			try {
-				final Collection<Structure> loadedStructures = this.loader.loadFromFile(file);
-				if (loadedStructures != null)
-					structures.addAll(loadedStructures);
-			} catch (final IOException ignored) { }
+			final Collection<Structure> loadedStructures = this.loader.loadFromFile(file);
+			if (loadedStructures != null)
+				structures.addAll(loadedStructures);
 		}
 	}
 

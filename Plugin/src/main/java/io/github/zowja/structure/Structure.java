@@ -39,6 +39,22 @@ public class Structure {
         return this.biome != null;
     }
 
+    public double getMinTemperature() {
+        return this.biome[0];
+    }
+
+    public double getMaxTemperature() {
+        return this.biome[1];
+    }
+
+    public double getMinHumidity() {
+        return this.biome[2];
+    }
+
+    public double getMaxHumidity() {
+        return this.biome[3];
+    }
+
     public void setHeightLimit(short min, short max) {
 	    if (min < 0) min = 0;
         if (min > 128) min = 128;

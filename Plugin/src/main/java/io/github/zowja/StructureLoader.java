@@ -32,23 +32,26 @@ public class StructureLoader {
         this.logger = logger;
     }
 
-    public Collection<Structure> loadFromFile(final File file) throws IOException {
-        if (file.getName().endsWith(".zip")) {
-            return this.loadStructurePack(new ZipFile(file));
-        }
+    public Collection<Structure> loadFromFile(final File file) {
+        try {
+            if (file.getName().endsWith(".zip")) {
+                return this.loadStructurePack(new ZipFile(file));
+            }
 
-        final String name = file.getName();
-        final List<String> lines = Files.readAllLines(file.toPath(), Charset.defaultCharset());
-        final Structure structure = this.loadFromLines(name, lines);
+            final String name = file.getName();
+            final List<String> lines = Files.readAllLines(file.toPath(), Charset.defaultCharset());
+            final Structure structure = this.loadFromLines(name, lines);
 
-        if (structure == null) return null;
+            if (structure == null) return null;
 
-        final HashSet<Structure> structures = new HashSet<>();
-        structures.add(structure);
-        return structures;
+            final HashSet<Structure> structures = new HashSet<>();
+            structures.add(structure);
+            return structures;
+        } catch (final IOException ignored) {}
+        return null;
     }
 
-    public Collection<Structure> loadStructurePack(final ZipFile zipFile) throws IOException {
+    public Collection<Structure> loadStructurePack(final ZipFile zipFile) {
         final HashSet<Structure> structures = new HashSet<>();
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
         while (entries.hasMoreElements()) {
@@ -58,7 +61,11 @@ public class StructureLoader {
             //       so name should have format: zipFileName.zip/structFileName
             //                               or: zipFileName.zip/folderName/structFileName
             final String name = zipFile.getName() + "/" + entry.getName();
-            final Scanner lineReader = new Scanner(zipFile.getInputStream(entry));
+            Scanner lineReader = null;
+            try {
+                lineReader = new Scanner(zipFile.getInputStream(entry));
+            } catch (final IOException ignored) {}
+            if (lineReader == null) continue;
             final List<String> lines = new ArrayList<>();
             while(lineReader.hasNextLine())
                 lines.add(lineReader.nextLine());
