@@ -18,8 +18,14 @@ import java.util.zip.ZipFile;
 
 public class StructureLoader {
 
+    private final Logger logger;
+
     private String state = "";
     private int skipLines, neededRandomsChestsSpawners, neededChecks;
+
+    public StructureLoader(final Logger logger) {
+        this.logger = logger;
+    }
 
     public Collection<Structure> loadFromFile(final File file) throws IOException {
         if (file.getName().endsWith(".zip")) {
@@ -152,17 +158,17 @@ public class StructureLoader {
         // not all randoms/checks/chests/spawners were found
         if (!this.state.equalsIgnoreCase("done") && readNext.equalsIgnoreCase("additionals")) {
             if (this.neededChecks > 0)
-                error(name, -1, "File is incomplete. Can't find all required multiChecks.");
+                this.error(name, -1, "File is incomplete. Can't find all required multiChecks.");
             else if (this.neededRandomsChestsSpawners > 0)
-                error(name, -1, "File is incomplete. Can't find all required randoms and/or chests and/or spawners.");
+                this.error(name, -1, "File is incomplete. Can't find all required randoms and/or chests and/or spawners.");
             else
-                error(name, -1, "Theoretically impossible error.");
+                this.error(name, -1, "Theoretically impossible error.");
             return null;
         }
 
         // structure file was incomplete, print error and return null
         if (!this.state.equalsIgnoreCase("done")) {
-            error(name, -1, "File is incomplete. Can't find " + readNext + " settings.");
+            this.error(name, -1, "File is incomplete. Can't find " + readNext + " settings.");
             return null;
         }
 
@@ -174,7 +180,7 @@ public class StructureLoader {
         try {
             struct.worldType = Short.parseShort(line);
         } catch (final NumberFormatException e) {
-            warn(name, lineNum, "Invalid worldType. Falling back to default 0.");
+            this.warn(name, lineNum, "Invalid worldType. Falling back to default 0.");
             struct.worldType = 0;
         }
     }
@@ -186,7 +192,7 @@ public class StructureLoader {
         }
         final String[] values = line.split(" ");
         if (values.length < 4) {
-            warn(name, lineNum, "Temperature and humidity settings require 4 values, found less. Ignoring them.");
+            this.warn(name, lineNum, "Temperature and humidity settings require 4 values, found less. Ignoring them.");
             struct.hasBiome = false;
             return;
         }
@@ -209,7 +215,7 @@ public class StructureLoader {
             }
             struct.hasBiome = true;
         } catch (final NumberFormatException e) {
-            warn(name, lineNum, "Invalid temperature and humidity settings. Ignoring them.");
+            this.warn(name, lineNum, "Invalid temperature and humidity settings. Ignoring them.");
             struct.hasBiome = false;
         }
     }
@@ -218,9 +224,9 @@ public class StructureLoader {
         try {
             struct.commonality = Double.parseDouble(line);
             if (struct.commonality == 0)
-                warn(name, lineNum, "Commonality value can't be 0. Structure will not be generated.");
+                this.warn(name, lineNum, "Commonality value can't be 0. Structure will not be generated.");
         } catch (final NumberFormatException e) {
-            warn(name, lineNum, "Invalid commonality value. Structure will not be generated.");
+            this.warn(name, lineNum, "Invalid commonality value. Structure will not be generated.");
             struct.commonality = 0;
         }
     }
@@ -228,7 +234,7 @@ public class StructureLoader {
     private void readHeight(final Structure struct, final String name, final int lineNum, final String line) {
         final String[] values = line.split(" ");
         if (values.length < 2) {
-            warn(name, lineNum, "Height settings require 2 values, found less. Falling back to default 0 and 128.");
+            this.warn(name, lineNum, "Height settings require 2 values, found less. Falling back to default 0 and 128.");
             struct.yBottom = 0;
             struct.yTop = 128;
             return;
@@ -243,23 +249,23 @@ public class StructureLoader {
                 struct.yTop = temp;
             }
             if (struct.yBottom < 0) {
-                warn(name, lineNum, "Invalid min height value. It can't be < 0. Falling back to default 0.");
+                this.warn(name, lineNum, "Invalid min height value. It can't be < 0. Falling back to default 0.");
                 struct.yBottom = 0;
             }
             if (struct.yBottom > 128) {
-                warn(name, lineNum, "Invalid min height value. It can't be > 128. Falling back to default 128.");
+                this.warn(name, lineNum, "Invalid min height value. It can't be > 128. Falling back to default 128.");
                 struct.yBottom = 0;
             }
             if (struct.yTop < 0) {
-                warn(name, lineNum, "Invalid max height value. It can't be < 0. Falling back to default 0.");
+                this.warn(name, lineNum, "Invalid max height value. It can't be < 0. Falling back to default 0.");
                 struct.yTop = 0;
             }
             if (struct.yTop > 128) {
-                warn(name, lineNum, "Invalid max height value. It can't be > 128. Falling back to default 128.");
+                this.warn(name, lineNum, "Invalid max height value. It can't be > 128. Falling back to default 128.");
                 struct.yTop = 0;
             }
         } catch (final NumberFormatException e) {
-            warn(name, lineNum, "Invalid height value. It has to be two integers. Falling back to default 0 and 128.");
+            this.warn(name, lineNum, "Invalid height value. It has to be two integers. Falling back to default 0 and 128.");
             struct.yBottom = 0;
             struct.yTop = 128;
         }
@@ -269,7 +275,7 @@ public class StructureLoader {
         final short[] size = new short[3];
         final String[] values = line.split(" ");
         if (values.length < 3) {
-            error(name, lineNum, "Structure size require 3 values, found less.");
+            this.error(name, lineNum, "Structure size require 3 values, found less.");
             this.state = "error";
             return;
         }
@@ -277,13 +283,13 @@ public class StructureLoader {
             for (int i = 0; i < 3; i++) {
                 size[i] = Short.parseShort(values[i]);
                 if (size[i] <= 0) {
-                    error(name, lineNum, "Structure size values have to be positive (more than 0).");
+                    this.error(name, lineNum, "Structure size values have to be positive (more than 0).");
                     this.state = "error";
                        return;
                 }
             }
         } catch (final NumberFormatException e) {
-            error(name, lineNum, "Invalid structure size values.");
+            this.error(name, lineNum, "Invalid structure size values.");
             this.state = "error";
             return;
         }
@@ -298,7 +304,7 @@ public class StructureLoader {
             if (this.shouldBeSkipped(line)) continue; // skip commented lines
             final String[] values = line.split(" ");
             if (values.length < 4) {
-                warn(name, lineNum, "Initial check require at least 4 values. Found less. Ignoring check.");
+                this.warn(name, lineNum, "Initial check require at least 4 values. Found less. Ignoring check.");
                 struct.hasInitial = false;
                 num++;
                 continue;
@@ -314,7 +320,7 @@ public class StructureLoader {
                 if (check[3] < -31) this.neededChecks++; // TODO: probably should be moved outside readInitialCheck method
                 checks.add(check);
             } catch (final NumberFormatException e) {
-                warn(name, lineNum, "Invalid initial check values. Ignoring check.");
+                this.warn(name, lineNum, "Invalid initial check values. Ignoring check.");
                 continue;
             }
             num++;
@@ -343,7 +349,7 @@ public class StructureLoader {
                 } else {
                     final String[] values = lines.get(lineNum-1).split(" ");
                     if (values.length < struct.deepCheck.length) {
-                        error(name, lineNum, "Deep check is missing some values.");
+                        this.error(name, lineNum, "Deep check is missing some values.");
                         this.state = "error";
                         return;
                     }
@@ -352,7 +358,7 @@ public class StructureLoader {
                             struct.deepCheck[width][height][length] = Short.parseShort(lines.get(lineNum-1));
                             if (struct.deepCheck[width][height][length] < -31) this.neededChecks++; // TODO: probably should be moved outside readDeepCheck method
                         } catch (final NumberFormatException e) {
-                            error(name, lineNum, "Invalid deep check value.");
+                            this.error(name, lineNum, "Invalid deep check value.");
                             this.state = "error";
                             return;
                         }
@@ -374,18 +380,18 @@ public class StructureLoader {
                 } else {
                     final String[] values = line.split(" ");
                     if (values.length < struct.structure.length) {
-                        error(name, lineNum, "Structure is missing some blocks.");
+                        this.error(name, lineNum, "Structure is missing some blocks.");
                         this.state = "error";
                         return;
                     }
                     for (int width = 0; width < struct.structure.length; width++) {
                         try {
-                            struct.structure[width][height][length] = Short.parseShort(values[3]);
+                            struct.structure[width][height][length] = Short.parseShort(values[width]);
                             if (struct.structure[width][height][length] < -31) {
                                 this.neededRandomsChestsSpawners++; // TODO: probably should be moved outside readStructure method
                             }
                         } catch (final NumberFormatException e) {
-                            error(name, lineNum, "Invalid structure block id.");
+                            this.error(name, lineNum, "Invalid structure block id.");
                             this.state = "error";
                             return;
                         }
@@ -405,7 +411,7 @@ public class StructureLoader {
             if (this.shouldBeSkipped(line)) continue; // skip commented lines
             final String[] values = line.split(" ");
             if (values.length < 4) {
-                warn(name, lineNum, "Metadata check require at 4 values. Found less. Ignoring check.");
+                this.warn(name, lineNum, "Metadata check require at 4 values. Found less. Ignoring check.");
                 struct.hasMeta = false;
                 continue;
             }
@@ -415,7 +421,7 @@ public class StructureLoader {
                     check[v] = Short.parseShort(values[v]);
                 checks.add(check);
             } catch (final NumberFormatException e) {
-                warn(name, lineNum, "Invalid initial check values. Ignoring check.");
+                this.warn(name, lineNum, "Invalid initial check values. Ignoring check.");
                 continue;
             }
             num++;
@@ -455,13 +461,13 @@ public class StructureLoader {
                         try {
                             values.push(Short.parseShort(checkLine));
                         } catch (final NumberFormatException e) {
-                            warn(name, lineNum+checkLineNum, "Invalid value when reading multiCheck. Skipping that value.");
+                            this.warn(name, lineNum+checkLineNum, "Invalid value when reading multiCheck. Skipping that value.");
                         }
                     }
                     checkLineNum++;
                 }
                 if (values.empty()) {
-                    warn(name, lineNum, "multiCheck is empty. Ignoring it.");
+                    this.warn(name, lineNum, "multiCheck is empty. Ignoring it.");
                 } else {
                     short[] check = new short[values.size()];
                     for (int i=0; i < values.size(); i++)
@@ -486,13 +492,13 @@ public class StructureLoader {
                             final short weight = values.length > 1 ? Short.parseShort(values[1]) : 1;
                             random.addNumber(number, weight);
                         } catch (final NumberFormatException e) {
-                            warn(name, lineNum+randomLineNum, "Invalid value when reading random. Skipping that value.");
+                            this.warn(name, lineNum+randomLineNum, "Invalid value when reading random. Skipping that value.");
                         }
                     }
                     randomLineNum++;
                 }
                 if (random.hasNumbers()) {
-                    warn(name, lineNum, "random is empty. Ignoring it.");
+                    this.warn(name, lineNum, "random is empty. Ignoring it.");
                 } else {
                     struct.addRandom(random);
                     this.neededRandomsChestsSpawners--;
@@ -507,17 +513,17 @@ public class StructureLoader {
                 try {
                     amount = Short.parseShort(line.split(" ")[1]);
                 } catch (final Exception e) {
-                    warn(name, lineNum, "Invalid amount value in chest declaration. Skipping that chest.");
+                    this.warn(name, lineNum, "Invalid amount value in chest declaration. Skipping that chest.");
                     ++lineNum;
                     continue;
                 }
                 if (amount <= 0) {
-                    warn(name, lineNum, "Amount value in chest declaration must be more than 0. Skipping that chest.");
+                    this.warn(name, lineNum, "Amount value in chest declaration must be more than 0. Skipping that chest.");
                     ++lineNum;
                     continue;
                 }
                 if (amount > 27) {
-                    warn(name, lineNum, "Amount value in chest declaration is to large. Falling back to 27 (max value).");
+                    this.warn(name, lineNum, "Amount value in chest declaration is to large. Falling back to 27 (max value).");
                     amount = 27;
                 }
                 final LootChest chest = new LootChest();
@@ -528,7 +534,7 @@ public class StructureLoader {
                     if (!this.shouldBeSkipped(lootEntryLine)) { // line is not commented
                         final String[] values  = lootEntryLine.split(" ");
                         if (values.length < 3) {
-                            warn(name, lineNum+chestLineNum, "Loot entry requires at least 3 values. Found less. Skipping that entry.");
+                            this.warn(name, lineNum+chestLineNum, "Loot entry requires at least 3 values. Found less. Skipping that entry.");
                             chestLineNum++;
                             continue;
                         }
@@ -540,13 +546,13 @@ public class StructureLoader {
                             lootData[3] = values.length == 3 ? Short.parseShort(values[2]) : Short.parseShort(values[3]);
                             chest.addLoot(lootData[0], lootData[1], lootData[2], lootData[3]);
                         } catch (final NumberFormatException e) {
-                            warn(name, lineNum+chestLineNum, "Invalid value when reading loot entry. Skipping that entry.");
+                            this.warn(name, lineNum+chestLineNum, "Invalid value when reading loot entry. Skipping that entry.");
                         }
                     }
                     chestLineNum++;
                 }
                 if (chest.hasLoot()) {
-                    warn(name, lineNum, "Chest is empty. Skipping it.");
+                    this.warn(name, lineNum, "Chest is empty. Skipping it.");
                 } else {
                     struct.chests.add(chest);
                 }
@@ -567,13 +573,13 @@ public class StructureLoader {
                             final short weight = values.length > 1 ? Short.parseShort(values[1]) : 1;
                             spawner.addEntry(mobId, weight);
                         } catch (final NumberFormatException e) {
-                            warn(name, lineNum+spawnerLineNum, "Invalid value when reading spawner entry. Skipping that entry.");
+                            this.warn(name, lineNum+spawnerLineNum, "Invalid value when reading spawner entry. Skipping that entry.");
                         }
                     }
                     spawnerLineNum++;
                 }
                 if (!spawner.hasEntries()) {
-                    warn(name, lineNum, "Spawner is empty. Ignoring it.");
+                    this.warn(name, lineNum, "Spawner is empty. Ignoring it.");
                 } else {
                     struct.addSpawner(spawner);
                     this.neededRandomsChestsSpawners--;
@@ -590,9 +596,9 @@ public class StructureLoader {
         } else {
             this.state = "error";
             if (this.neededChecks > 0)
-                error(name, -1, "Missing " + this.neededChecks + " multiChecks.");
+                this.error(name, -1, "Missing " + this.neededChecks + " multiChecks.");
             if (this.neededRandomsChestsSpawners > 0) {
-                error(name, -1, "Missing " + this.neededRandomsChestsSpawners + " randoms and/or chests and/or spawners.");
+                this.error(name, -1, "Missing " + this.neededRandomsChestsSpawners + " randoms and/or chests and/or spawners.");
             }
         }
 
@@ -610,17 +616,15 @@ public class StructureLoader {
         return line;
     }
 
-    private static void warn(final String name, final int lineNum, final String message) {
-        final Logger logger = Bukkit.getServer().getLogger();
-        logger.warning("[CS] Error parsing '" + name + "' structure. " + message + " (line " + lineNum + ")");
+    private void warn(final String name, final int lineNum, final String message) {
+        this.logger.warning("[CS] Error parsing '" + name + "' structure. " + message + " (line " + lineNum + ")");
     }
 
-    private static void error(final String name, final int lineNum, final String message) {
-        final Logger logger = Bukkit.getServer().getLogger();
+    private void error(final String name, final int lineNum, final String message) {
         if (lineNum == -1)
-            logger.warning("[CS][!] Failed to parse '" + name + "' structure. " + message);
+            this.logger.warning("[CS][!] Failed to parse '" + name + "' structure. " + message);
         else
-            logger.warning("[CS][!] Failed to parse '" + name + "' structure. " + message + " (line " + lineNum + ")");
+            this.logger.warning("[CS][!] Failed to parse '" + name + "' structure. " + message + " (line " + lineNum + ")");
     }
 
 }
