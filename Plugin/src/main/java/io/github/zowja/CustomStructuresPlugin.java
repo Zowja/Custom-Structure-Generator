@@ -20,7 +20,7 @@ import io.github.zowja.structure.Structure;
 public class CustomStructuresPlugin extends JavaPlugin {
 
     public static final Set<Structure> structures = new HashSet<>();
-    private final StructureLoader loader = new StructureLoader(this.getServer().getLogger());
+    private StructureLoader loader;
 
     @Override
     public void onDisable() { }
@@ -29,6 +29,8 @@ public class CustomStructuresPlugin extends JavaPlugin {
     public void onEnable() {
         this.saveDefaultConfig();
         this.getConfiguration().load();
+
+        this.loader = new StructureLoader(this.getServer().getLogger());
 
         this.loadStructures();
         this.getServer().getLogger().info("[CS] Loaded " + structures.size() + " Custom Structures.");
