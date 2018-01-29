@@ -26,6 +26,22 @@ public class Structure {
 	public final List<RandomNumberSet> randoms = new ArrayList<>();
 	public final List<Spawner> spawners = new ArrayList<>();
 
+	public int getWidth() {
+	    return this.structure.length;
+    }
+
+    public int getHeight() {
+	    return this.structure[0].length;
+    }
+
+    public int getLength() {
+	    return this.structure[0][0].length;
+    }
+
+    public int getId(final int x, final int y, final int z) {
+	    return this.structure[x][y][z];
+    }
+
 	public LootChest getNewChest() {
 		this.chests.add(new LootChest());
 		return this.chests.get(this.chests.size() - 1);
