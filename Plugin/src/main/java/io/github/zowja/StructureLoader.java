@@ -26,7 +26,9 @@ public class StructureLoader {
     private final Logger logger;
 
     private String state = "";
-    private int skipLines, neededRandomsChestsSpawners, neededChecks;
+    private int skipLines, neededComplexBlocks, neededChecks;
+    private final Collection<Short> knownComplexBlocks = new HashSet<>();
+    private final Collection<Short> knownChecks = new HashSet<>();
 
     public StructureLoader(final Logger logger) {
         this.logger = logger;
@@ -85,8 +87,10 @@ public class StructureLoader {
         // reset global variables
         this.state = "";
         this.neededChecks = 0;
-        this.neededRandomsChestsSpawners = 0;
+        this.neededComplexBlocks = 0;
         this.skipLines = 0;
+        this.knownComplexBlocks.clear();
+        this.knownChecks.clear();
 
         final Structure struct = new Structure();
         struct.seed = name.hashCode();
@@ -103,7 +107,11 @@ public class StructureLoader {
             final String line = lines.get(i);
 
             // skip empty and meaningless or commented lines
-            if (this.shouldBeSkipped(line) && !readNext.equalsIgnoreCase("initial check")) continue;
+            if (this.shouldBeSkipped(line)
+                    // initial check and metadata are ignored if there's an empty line so we can't skip it
+                    && !readNext.equalsIgnoreCase("initial check")
+                    && !readNext.equalsIgnoreCase("metadata")
+            ) continue;
 
             switch (readNext) {
                 case "world type":
@@ -140,10 +148,10 @@ public class StructureLoader {
                     break;
                 case "metadata":
                     this.readMetaData(struct, name, lineNum, lines);
-                    readNext = "additionals";
+                    readNext = "checks and complex blocks";
                     break;
-                case "additionals": // TODO: better name?
-                    this.readAdditionals(struct, name, lineNum, lines);
+                case "checks and complex blocks":
+                    this.readChecksAndComplexBlocks(struct, name, lineNum, lines);
                     break;
             }
 
@@ -154,11 +162,11 @@ public class StructureLoader {
         }
 
         // no metadata was found and no additionals are needed, so just mark it as done
-        if (readNext.equalsIgnoreCase("metadata") && this.neededChecks == 0 && this.neededRandomsChestsSpawners == 0)
+        if (readNext.equalsIgnoreCase("metadata") && this.neededChecks == 0 && this.neededComplexBlocks == 0)
             this.state = "done";
 
         // no additionals were found but they were not needed, so just mark it as done
-        if (readNext.equalsIgnoreCase("additionals") && this.neededChecks == 0 && this.neededRandomsChestsSpawners == 0)
+        if (readNext.equalsIgnoreCase("checks and complex blocks") && this.neededChecks == 0 && this.neededComplexBlocks == 0)
             this.state = "done";
 
         // there was an error, return null
@@ -166,11 +174,11 @@ public class StructureLoader {
             return null;
 
         // not all randoms/checks/chests/spawners were found
-        if (!this.state.equalsIgnoreCase("done") && readNext.equalsIgnoreCase("additionals")) {
+        if (!this.state.equalsIgnoreCase("done") && readNext.equalsIgnoreCase("checks and complex blocks")) {
             if (this.neededChecks > 0)
                 this.error(name, -1, "File is incomplete. Can't find all required multiChecks.");
-            else if (this.neededRandomsChestsSpawners > 0)
-                this.error(name, -1, "File is incomplete. Can't find all required randoms and/or chests and/or spawners.");
+            else if (this.neededComplexBlocks > 0)
+                this.error(name, -1, "File is incomplete. Can't find all required complex blocks.");
             else
                 this.error(name, -1, "Theoretically impossible error.");
             return null;
@@ -286,7 +294,9 @@ public class StructureLoader {
                     check[4] = Short.parseShort(values[4]);
                 else
                     check[4] = -1;
-                if (check[3] < -31) this.neededChecks++; // TODO: probably should be moved outside readInitialCheck method
+                if (check[3] < -31) {
+                    this.handleChecks(check[3]);
+                }
                 checks.add(check);
             } catch (final NumberFormatException e) {
                 this.warn(name, lineNum, "Invalid initial check values. Ignoring check.");
@@ -294,7 +304,7 @@ public class StructureLoader {
             }
         }
         if (!checks.isEmpty())
-            struct.initialCheck = (short[][]) checks.toArray();
+            struct.initialCheck = checks.toArray(new short[checks.size()][5]);
     }
 
     private void readDeepCheck(final Structure struct, final String name, int lineNum, final List<String> lines) {
@@ -315,7 +325,8 @@ public class StructureLoader {
                     for (int width = 0; width < struct.deepCheck.length; width++) {
                         try {
                             struct.deepCheck[width][height][length] = Short.parseShort(lines.get(lineNum-1));
-                            if (struct.deepCheck[width][height][length] < -31) this.neededChecks++; // TODO: probably should be moved outside readDeepCheck method
+                            if (struct.deepCheck[width][height][length] < -31)
+                                this.handleChecks(struct.deepCheck[width][height][length]);
                         } catch (final NumberFormatException e) {
                             this.error(name, lineNum, "Invalid deep check value.");
                             this.state = "error";
@@ -330,6 +341,7 @@ public class StructureLoader {
     }
 
     private void readStructure(final Structure struct, final String name, int lineNum, final List<String> lines) {
+        this.skipLines = -1;
         for (int height = 0; height < struct.structure[0].length; height++) {
             for (int length = 0; length < struct.structure[0][0].length; length++) {
                 final String line = lines.get(lineNum-1);
@@ -346,7 +358,7 @@ public class StructureLoader {
                         try {
                             struct.structure[width][height][length] = Short.parseShort(values[width]);
                             if (struct.structure[width][height][length] < -31) {
-                                this.neededRandomsChestsSpawners++; // TODO: probably should be moved outside readStructure method
+                                this.handleComplexBlocks(struct.structure[width][height][length]);
                             }
                         } catch (final NumberFormatException e) {
                             this.error(name, lineNum, "Invalid structure block id.");
@@ -364,8 +376,10 @@ public class StructureLoader {
     private void readMetaData(final Structure struct, final String name, int lineNum, final List<String> lines) {
         int metaLineNum = lineNum;
         final List<short[]> checks = new ArrayList<>();
-        while (!lines.get(metaLineNum-1).isEmpty()) {
+        while (lines.size() != metaLineNum-1 && !lines.get(metaLineNum-1).isEmpty()) {
             final String line = lines.get(metaLineNum-1);
+            metaLineNum++;
+            this.skipLines++;
             if (this.shouldBeSkipped(line)) continue; // skip commented lines
             final String[] values = line.split(" ");
             if (values.length < 4) {
@@ -381,8 +395,6 @@ public class StructureLoader {
                 this.warn(name, lineNum, "Invalid initial check values. Ignoring check.");
                 continue;
             }
-            metaLineNum++;
-            this.skipLines++;
         }
         if (!checks.isEmpty()) {
             short[][] meta = new short[checks.size()][4];
@@ -396,8 +408,8 @@ public class StructureLoader {
         }
     }
 
-    private void readAdditionals(final Structure struct, final String name, int lineNum, final List<String> lines) {
-        while (lines.size() - lineNum > 0 && (this.neededChecks > 0 || this.neededRandomsChestsSpawners > 0)) {
+    private void readChecksAndComplexBlocks(final Structure struct, final String name, int lineNum, final List<String> lines) {
+        while (lines.size() - lineNum > 0 && (this.neededChecks > 0 || this.neededComplexBlocks > 0)) {
             final String line = lines.get(lineNum-1);
             if (this.shouldBeSkipped(line)) { // skip empty and commented lines
                 lineNum++;
@@ -408,7 +420,7 @@ public class StructureLoader {
             if (line.equalsIgnoreCase("check") && this.neededChecks > 0) {
                 int checkLineNum = 1;
                 final Stack<Short> values = new Stack<>();
-                while (!lines.get(lineNum-1+checkLineNum).isEmpty()) {
+                while (lines.size() != lineNum-1+checkLineNum && !lines.get(lineNum-1+checkLineNum).isEmpty()) {
                     final String checkLine = lines.get(lineNum-1+checkLineNum);
                     if (!this.shouldBeSkipped(checkLine)) { // line is not commented
                         try {
@@ -423,7 +435,7 @@ public class StructureLoader {
                     this.warn(name, lineNum, "multiCheck is empty. Ignoring it.");
                 } else {
                     short[] check = new short[values.size()];
-                    for (int i=0; i < values.size(); i++)
+                    for (int i=0; i < values.size()+2; i++)
                         check[i] = values.pop();
                     struct.multiChecks.add(check);
                     this.neededChecks--;
@@ -433,10 +445,10 @@ public class StructureLoader {
             }
 
             // TODO: extract to separate method
-            if (line.equalsIgnoreCase("random") && this.neededRandomsChestsSpawners > 0) {
+            if (line.equalsIgnoreCase("random") && this.neededComplexBlocks > 0) {
                 int randomLineNum = 1;
                 final RandomNumberSet random = new RandomNumberSet();
-                while (!lines.get(lineNum-1+randomLineNum).isEmpty()) {
+                while (lines.size() != lineNum-1+randomLineNum && !lines.get(lineNum-1+randomLineNum).isEmpty()) {
                     final String randomLine = lines.get(lineNum-1+randomLineNum);
                     if (!this.shouldBeSkipped(randomLine)) { // line is not commented
                         final String[] values  = randomLine.split(" ");
@@ -450,18 +462,18 @@ public class StructureLoader {
                     }
                     randomLineNum++;
                 }
-                if (random.hasNumbers()) {
+                if (!random.hasNumbers()) {
                     this.warn(name, lineNum, "random is empty. Ignoring it.");
                 } else {
                     struct.randoms.add(random);
-                    this.neededRandomsChestsSpawners--;
+                    this.neededComplexBlocks--;
                 }
                 lineNum += randomLineNum;
                 continue;
             }
 
             // TODO: extract to separate method
-            if (line.startsWith("chest")  && this.neededRandomsChestsSpawners > 0) {
+            if (line.startsWith("chest")  && this.neededComplexBlocks > 0) {
                 short amount;
                 try {
                     amount = Short.parseShort(line.split(" ")[1]);
@@ -482,7 +494,7 @@ public class StructureLoader {
                 final LootChest chest = new LootChest();
                 chest.numOfLoot = amount;
                 int chestLineNum = 1;
-                while (!lines.get(lineNum-1+chestLineNum).isEmpty()) {
+                while (lines.size() != lineNum-1+chestLineNum && !lines.get(lineNum-1+chestLineNum).isEmpty()) {
                     final String lootEntryLine = lines.get(lineNum-1+chestLineNum);
                     if (!this.shouldBeSkipped(lootEntryLine)) { // line is not commented
                         final String[] values  = lootEntryLine.split(" ");
@@ -514,10 +526,10 @@ public class StructureLoader {
             }
 
             // TODO: extract to separate method
-            if (line.startsWith("spawner")  && this.neededRandomsChestsSpawners > 0) {
+            if (line.startsWith("spawner")  && this.neededComplexBlocks > 0) {
                 int spawnerLineNum = 1;
                 final Spawner spawner = new Spawner();
-                while (!lines.get(lineNum-1+spawnerLineNum).isEmpty()) {
+                while (lines.size() != lineNum-1+spawnerLineNum&& !lines.get(lineNum-1+spawnerLineNum).isEmpty()) {
                     final String spawnerLine = lines.get(lineNum-1+spawnerLineNum);
                     if (!this.shouldBeSkipped(spawnerLine)) { // line is not commented
                         final String[] values  = spawnerLine.split(" ");
@@ -535,7 +547,7 @@ public class StructureLoader {
                     this.warn(name, lineNum, "Spawner is empty. Ignoring it.");
                 } else {
                     struct.spawners.add(spawner);
-                    this.neededRandomsChestsSpawners--;
+                    this.neededComplexBlocks--;
                 }
                 lineNum += spawnerLineNum;
                 continue;
@@ -544,17 +556,29 @@ public class StructureLoader {
 
             lineNum++;
         }
-        if (this.neededChecks == 0 && this.neededRandomsChestsSpawners == 0) {
+        if (this.neededChecks == 0 && this.neededComplexBlocks == 0) {
             this.state = "done";
         } else {
             this.state = "error";
             if (this.neededChecks > 0)
                 this.error(name, -1, "Missing " + this.neededChecks + " multiChecks.");
-            if (this.neededRandomsChestsSpawners > 0) {
-                this.error(name, -1, "Missing " + this.neededRandomsChestsSpawners + " randoms and/or chests and/or spawners.");
+            if (this.neededComplexBlocks > 0) {
+                this.error(name, -1, "Missing " + this.neededComplexBlocks + " randoms and/or chests and/or spawners.");
             }
         }
 
+    }
+
+    private void handleChecks(final short id) {
+        if (this.knownChecks.contains(id)) return;
+        this.knownChecks.add(id);
+        this.neededChecks++;
+    }
+
+    private void handleComplexBlocks(final short id) {
+        if (this.knownComplexBlocks.contains(id)) return;
+        this.knownComplexBlocks.add(id);
+        this.neededComplexBlocks++;
     }
 
     /** Checks if line is commented or empty */

@@ -28,7 +28,7 @@ public class RandomNumberSet {
     }
 
     public boolean hasNumbers() {
-        return this.numbers.isEmpty();
+        return !this.numbers.isEmpty();
     }
 
     private class RandomNumber {
