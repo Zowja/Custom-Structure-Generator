@@ -82,7 +82,7 @@ public class StructureLoader {
         this.skipLines = 0;
 
         final Structure struct = new Structure();
-        struct.random = name.hashCode();
+        struct.seed = name.hashCode();
         lines.replaceAll(String::trim); // trim all lines
         lines.replaceAll(this::stripComments); // strip all comments from line endings
         lines.replaceAll(line -> line.replaceAll("  +", " ")); // make sure all values are separated only by one space
@@ -190,36 +190,22 @@ public class StructureLoader {
 
     private void readTemperatureAndHumidity(final Structure struct, final String name, final int lineNum, final String line) {
         if (line.equalsIgnoreCase("x")) {
-            struct.hasBiome = false;
             return;
         }
         final String[] values = line.split(" ");
         if (values.length < 4) {
             this.warn(name, lineNum, "Temperature and humidity settings require 4 values, found less. Ignoring them.");
-            struct.hasBiome = false;
             return;
         }
         try {
-            struct.lowTemp = Double.parseDouble(values[0]);
-            struct.topTemp = Double.parseDouble(values[1]);
-            struct.lowHumidity = Double.parseDouble(values[2]);
-            struct.topHumidity = Double.parseDouble(values[3]);
-            // make sure lowTemp <= topTemp, swap values if necessary
-            if (struct.lowTemp > struct.topTemp) {
-                final double temp = struct.lowTemp;
-                struct.lowTemp = struct.topTemp;
-                struct.topTemp = temp;
-            }
-            // make sure lowHumidity <= topHumidity, swap values if necessary
-            if (struct.lowHumidity > struct.topHumidity) {
-                final double temp = struct.lowHumidity;
-                struct.lowHumidity = struct.topHumidity;
-                struct.topHumidity = temp;
-            }
-            struct.hasBiome = true;
+            struct.setBiome(
+                    Double.parseDouble(values[0]),
+                    Double.parseDouble(values[1]),
+                    Double.parseDouble(values[2]),
+                    Double.parseDouble(values[3])
+            );
         } catch (final NumberFormatException e) {
             this.warn(name, lineNum, "Invalid temperature and humidity settings. Ignoring them.");
-            struct.hasBiome = false;
         }
     }
 
@@ -237,40 +223,13 @@ public class StructureLoader {
     private void readHeight(final Structure struct, final String name, final int lineNum, final String line) {
         final String[] values = line.split(" ");
         if (values.length < 2) {
-            this.warn(name, lineNum, "Height settings require 2 values, found less. Falling back to default 0 and 128.");
-            struct.yBottom = 0;
-            struct.yTop = 128;
+            this.warn(name, lineNum, "Height settings require 2 values, found less. Default values will be used.");
             return;
         }
         try {
-            struct.yBottom = Short.parseShort(values[0]);
-            struct.yTop = Short.parseShort(values[1]);
-            // make sure yBottom <= yTop, swap values if necessary
-            if (struct.yBottom > struct.yTop) {
-                final short temp = struct.yBottom;
-                struct.yBottom = struct.yTop;
-                struct.yTop = temp;
-            }
-            if (struct.yBottom < 0) {
-                this.warn(name, lineNum, "Invalid min height value. It can't be < 0. Falling back to default 0.");
-                struct.yBottom = 0;
-            }
-            if (struct.yBottom > 128) {
-                this.warn(name, lineNum, "Invalid min height value. It can't be > 128. Falling back to default 128.");
-                struct.yBottom = 0;
-            }
-            if (struct.yTop < 0) {
-                this.warn(name, lineNum, "Invalid max height value. It can't be < 0. Falling back to default 0.");
-                struct.yTop = 0;
-            }
-            if (struct.yTop > 128) {
-                this.warn(name, lineNum, "Invalid max height value. It can't be > 128. Falling back to default 128.");
-                struct.yTop = 0;
-            }
+            struct.setHeightLimit(Short.parseShort(values[0]), Short.parseShort(values[1]));
         } catch (final NumberFormatException e) {
-            this.warn(name, lineNum, "Invalid height value. It has to be two integers. Falling back to default 0 and 128.");
-            struct.yBottom = 0;
-            struct.yTop = 128;
+            this.warn(name, lineNum, "Invalid height value. It has to be two integers. Default values will be used.");
         }
     }
 
@@ -310,7 +269,6 @@ public class StructureLoader {
             final String[] values = line.split(" ");
             if (values.length < 4) {
                 this.warn(name, lineNum, "Initial check require at least 4 values. Found less. Ignoring check.");
-                struct.hasInitial = false;
                 continue;
             }
             try {
@@ -328,19 +286,12 @@ public class StructureLoader {
                 continue;
             }
         }
-        if (!checks.isEmpty()) {
+        if (!checks.isEmpty())
             struct.initialCheck = (short[][]) checks.toArray();
-            struct.hasInitial = true;
-        } else {
-            struct.hasInitial = false;
-        }
     }
 
     private void readDeepCheck(final Structure struct, final String name, int lineNum, final List<String> lines) {
-        if (lines.get(lineNum-1).equalsIgnoreCase("x")) {
-            struct.hasDeep = false;
-            return;
-        }
+        if (lines.get(lineNum-1).equalsIgnoreCase("x")) return;
         struct.deepCheck = struct.structure.clone();
         for (int height = 0; height < struct.deepCheck[0].length; height++) {
             for (int length = 0; length < struct.deepCheck[0][0].length; length++) {
@@ -412,7 +363,6 @@ public class StructureLoader {
             final String[] values = line.split(" ");
             if (values.length < 4) {
                 this.warn(name, lineNum, "Metadata check require at 4 values. Found less. Ignoring check.");
-                struct.hasMeta = false;
                 continue;
             }
             try {
@@ -436,9 +386,6 @@ public class StructureLoader {
                 meta[i][3] = checks.get(0)[3];
             }
             struct.metadata = meta;
-            struct.hasMeta = true;
-        } else {
-            struct.hasMeta = false;
         }
     }
 
@@ -499,7 +446,7 @@ public class StructureLoader {
                 if (random.hasNumbers()) {
                     this.warn(name, lineNum, "random is empty. Ignoring it.");
                 } else {
-                    struct.addRandom(random);
+                    struct.randoms.add(random);
                     this.neededRandomsChestsSpawners--;
                 }
                 lineNum += randomLineNum;
@@ -580,7 +527,7 @@ public class StructureLoader {
                 if (!spawner.hasEntries()) {
                     this.warn(name, lineNum, "Spawner is empty. Ignoring it.");
                 } else {
-                    struct.addSpawner(spawner);
+                    struct.spawners.add(spawner);
                     this.neededRandomsChestsSpawners--;
                 }
                 lineNum += spawnerLineNum;

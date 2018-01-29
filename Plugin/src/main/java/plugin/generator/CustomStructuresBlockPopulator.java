@@ -29,7 +29,7 @@ public class CustomStructuresBlockPopulator extends BlockPopulator {
 
         for (final Structure struct : CustomStructuresPlugin.structures) {
             //Reset seed so that the individual structures are consistent across all seeds.
-            rand.setSeed(baseSeed + struct.random);
+            rand.setSeed(baseSeed + struct.seed);
 
             double spawnAttempts = struct.commonality;
             while (spawnAttempts > 0) {
@@ -40,7 +40,7 @@ public class CustomStructuresBlockPopulator extends BlockPopulator {
                 spawnAttempts--;
 
                 final int originX = rand.nextInt(16) + chunk.getX() * 16;
-                final int originY = struct.yBottom + rand.nextInt(struct.yTop - struct.yBottom + 1);
+                final int originY = struct.getLimitedRandomY(rand);
                 final int originZ = rand.nextInt(16) + chunk.getZ() * 16;
 
                 final Location loc = new Location(world, originX, originY, originZ);
@@ -51,7 +51,7 @@ public class CustomStructuresBlockPopulator extends BlockPopulator {
                     for (int y = 0; y < struct.getHeight(); y++) {
                         for (int z = 0; z < struct.getLength(); z++) {
                             final Block block = origin.getRelative(x, y, z);
-                            final int id = struct.getId(x,y,z);
+                            final int id = struct.getBlockId(x,y,z);
                             this.setBlock(block, struct, id, rand);
                         }
                     }
@@ -77,7 +77,7 @@ public class CustomStructuresBlockPopulator extends BlockPopulator {
     }
 
     private void setMeta(final Block origin, final Structure struct) {
-        if (!struct.hasMeta) return;
+        if (!struct.hasMeta()) return;
         for (final short[] meta : struct.metadata)
             origin.getRelative(meta[0], meta[1], meta[2]).setData((byte) meta[3]);
     }

@@ -1,4 +1,3 @@
-import static java.time.Duration.ofSeconds;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 import plugin.StructureLoader;
@@ -27,17 +26,17 @@ public class StructureLoaderTests {
         final Structure struct = loader.loadFromLines("testStructure", lines);
         assertNotNull(struct);
         assertEquals(1, struct.worldType);
-        assertFalse(struct.hasBiome);
+        assertFalse(struct.hasBiome());
         assertEquals(10, struct.commonality);
-        assertEquals(64, struct.yBottom);
-        assertEquals(128, struct.yTop);
+        assertEquals(64, struct.getHeightLimitMin());
+        assertEquals(128, struct.getHeightLimitMax());
         assertEquals(1, struct.getWidth());
         assertEquals(1, struct.getHeight());
         assertEquals(1, struct.getLength());
-        assertFalse(struct.hasInitial);
-        assertFalse(struct.hasDeep);
+        assertFalse(struct.hasInitial());
+        assertFalse(struct.hasDeep());
         assertEquals(1, struct.structure[0][0][0]);
-        assertFalse(struct.hasMeta);
+        assertFalse(struct.hasMeta());
     }
 
     @Test
@@ -62,17 +61,17 @@ public class StructureLoaderTests {
         final Structure struct = loader.loadFromLines("testStructure", lines);
         assertNotNull(struct);
         assertEquals(1, struct.worldType);
-        assertFalse(struct.hasBiome);
+        assertFalse(struct.hasBiome());
         assertEquals(10, struct.commonality);
-        assertEquals(64, struct.yBottom);
-        assertEquals(128, struct.yTop);
+        assertEquals(64, struct.getHeightLimitMin());
+        assertEquals(128, struct.getHeightLimitMax());
         assertEquals(1, struct.getWidth());
         assertEquals(1, struct.getHeight());
         assertEquals(1, struct.getLength());
-        assertFalse(struct.hasInitial);
-        assertFalse(struct.hasDeep);
+        assertFalse(struct.hasInitial());
+        assertFalse(struct.hasDeep());
         assertEquals(1, struct.structure[0][0][0]);
-        assertFalse(struct.hasMeta);
+        assertFalse(struct.hasMeta());
     }
 
 }

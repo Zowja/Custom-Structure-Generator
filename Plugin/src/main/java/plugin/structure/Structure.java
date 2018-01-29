@@ -7,16 +7,16 @@ import plugin.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Structure {
 
-	public int random;
-	public boolean hasBiome, hasInitial, hasDeep, hasMeta;
+	public int seed;
 
 	public short worldType;
-	public double topTemp, lowTemp, topHumidity, lowHumidity;
+	private double[] biome;
 	public double commonality;
-	public short yTop, yBottom;
+	private short[] heightLimit;
 	public short[][] initialCheck;
 	public short[][][] deepCheck;
 	public short[][][] structure;
@@ -25,6 +25,51 @@ public class Structure {
 	public final List<LootChest> chests = new ArrayList<>();
 	public final List<RandomNumberSet> randoms = new ArrayList<>();
 	public final List<Spawner> spawners = new ArrayList<>();
+
+    public void setBiome(final double minTemperature, final double maxTemperature, final double minHumidity, final double maxHumidity) {
+        this.biome = new double[]{
+                minTemperature > maxTemperature ? maxTemperature : minTemperature,
+                minTemperature > maxTemperature ? minTemperature : maxTemperature,
+                minHumidity > maxHumidity ? maxHumidity : minHumidity,
+                minHumidity > maxHumidity ? minHumidity : maxHumidity
+        };
+    }
+
+    public boolean hasBiome() {
+        return this.biome != null;
+    }
+
+    public void setHeightLimit(short min, short max) {
+	    if (min < 0) min = 0;
+        if (min > 128) min = 128;
+        if (max < 0) max = 0;
+        if (max > 128) max = 128;
+	    this.heightLimit = min > max ? new short[]{max, min} : new short[]{min, max};
+    }
+
+    public int getLimitedRandomY(final Random rand) {
+        return this.getHeightLimitMin() + rand.nextInt(this.getHeightLimitMax() - this.getHeightLimitMin() + 1);
+    }
+
+    public short getHeightLimitMin() {
+        return this.heightLimit != null ? this.heightLimit[0] : 0;
+    }
+
+    public short getHeightLimitMax() {
+	    return this.heightLimit != null ? this.heightLimit[1] : 128;
+    }
+
+    public boolean hasInitial() {
+        return this.initialCheck != null;
+    }
+
+    public boolean hasDeep() {
+        return this.deepCheck != null;
+    }
+
+    public boolean hasMeta() {
+        return this.metadata != null;
+    }
 
 	public int getWidth() {
 	    return this.structure.length;
@@ -38,23 +83,11 @@ public class Structure {
 	    return this.structure[0][0].length;
     }
 
-    public int getId(final int x, final int y, final int z) {
+    public int getBlockId(final int x, final int y, final int z) {
 	    return this.structure[x][y][z];
     }
 
-	public void addChest(final LootChest chest) {
-		this.chests.add(chest);
-	}
-
-	public void addSpawner(final Spawner spawner) {
-		this.spawners.add(spawner);
-	}
-
-	public void addRandom(final RandomNumberSet random) {
-		this.randoms.add(random);
-	}
-
-	public boolean canGenerateAt(final Location loc, final long seed) {
+    public boolean canGenerateAt(final Location loc, final long seed) {
         if (!this.checkWorldType(loc.getWorld())) return false;
         if (!this.checkBiome(loc, seed)) return false;
 	    if (!this.initCheck(loc)) return false;
@@ -71,18 +104,18 @@ public class Structure {
     }
 
     private boolean checkBiome(final Location loc, final long seed) {
-	    if (!this.hasBiome) return true;
+	    if (!this.hasBiome()) return true;
 	    double temperature = loc.getBlock().getTemperature();
-        if (temperature > this.topTemp) return false;
-        if (temperature < this.lowTemp) return false;
+        if (temperature > this.biome[1]) return false;
+        if (temperature < this.biome[0]) return false;
         double humidity = Utils.getHumidity(seed,loc.getBlockX(), loc.getBlockZ());
-        if (humidity > this.topHumidity) return false;
-        if (humidity < this.lowHumidity) return false;
+        if (humidity > this.biome[3]) return false;
+        if (humidity < this.biome[2]) return false;
         return true;
     }
 
     private boolean initCheck(final Location loc) {
-	    if (!this.hasInitial) return true;
+	    if (!this.hasInitial()) return true;
         for (short[] check : this.initialCheck) {
             final Block block = loc.clone().add(check[0], check[1], check[2]).getBlock();
             if (check[3] > -1) {
@@ -100,7 +133,7 @@ public class Structure {
     }
 
     private boolean deepCheck(final Location loc) {
-	    if (!this.hasDeep) return true;
+	    if (!this.hasDeep()) return true;
         for (int x = 0; x < this.getWidth(); x++) {
             for (int y = 0; y < this.getHeight(); y++) {
                 for (int z = 0; z < this.getLength(); z++) {
@@ -119,11 +152,11 @@ public class Structure {
         return true;
     }
 
-    private boolean multiCheck(final Location loc, final int checkNum) {
+    private boolean multiCheck(final Location loc, final int checkId) {
         final int blockId = loc.getBlock().getTypeId();
-        final short[] checks = this.multiChecks.get(-checkNum - 32);
-        for (final int check : checks) {
-            if (blockId != check)
+        final short[] ids = this.multiChecks.get(-checkId - 32);
+        for (final int id : ids) {
+            if (blockId != id)
                 return false;
         }
         return true;
