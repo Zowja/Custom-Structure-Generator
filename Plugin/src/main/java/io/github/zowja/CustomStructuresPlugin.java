@@ -33,7 +33,7 @@ public class CustomStructuresPlugin extends JavaPlugin {
         this.loader = new StructureLoader(this.getServer().getLogger());
 
         this.loadStructures();
-        this.getServer().getLogger().info("[CS] Loaded " + structures.size() + " Custom Structures.");
+        this.getServer().getLogger().info("[CS] Loaded " + structures.size() + " Custom Structure" + (structures.size() == 1 ? "." : "s."));
 
         this.getServer().getPluginManager().registerEvent(Event.Type.WORLD_INIT, new WorldListener(), new WorldInitEventExecutor(this), Event.Priority.High, this);
 
