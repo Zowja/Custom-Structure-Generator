@@ -1,9 +1,9 @@
-package plugin.structure;
+package io.github.zowja.structure;
 
+import io.github.zowja.Utils;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import plugin.Utils;
 
 import java.util.ArrayList;
 import java.util.List;

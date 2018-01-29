@@ -1,4 +1,4 @@
-package plugin.structure;
+package io.github.zowja.structure;
 
 import org.bukkit.inventory.ItemStack;
 

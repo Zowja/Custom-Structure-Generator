@@ -1,9 +1,9 @@
-package plugin;
+package io.github.zowja;
 
-import plugin.structure.LootChest;
-import plugin.structure.RandomNumberSet;
-import plugin.structure.Spawner;
-import plugin.structure.Structure;
+import io.github.zowja.structure.LootChest;
+import io.github.zowja.structure.Spawner;
+import io.github.zowja.structure.RandomNumberSet;
+import io.github.zowja.structure.Structure;
 
 import java.io.File;
 import java.io.IOException;

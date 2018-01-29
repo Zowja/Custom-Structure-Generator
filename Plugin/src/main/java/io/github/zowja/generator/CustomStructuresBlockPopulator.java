@@ -1,5 +1,7 @@
-package plugin.generator;
+package io.github.zowja.generator;
 
+import io.github.zowja.structure.LootChest;
+import io.github.zowja.structure.Spawner;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -10,11 +12,9 @@ import org.bukkit.block.CreatureSpawner;
 import org.bukkit.generator.BlockPopulator;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import plugin.CustomStructuresPlugin;
-import plugin.structure.LootChest;
-import plugin.structure.RandomNumberSet;
-import plugin.structure.Spawner;
-import plugin.structure.Structure;
+import io.github.zowja.CustomStructuresPlugin;
+import io.github.zowja.structure.RandomNumberSet;
+import io.github.zowja.structure.Structure;
 
 import java.util.ArrayList;
 import java.util.List;

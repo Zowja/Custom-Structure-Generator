@@ -1,4 +1,4 @@
-package plugin.structure;
+package io.github.zowja.structure;
 
 import java.util.ArrayList;
 import java.util.List;

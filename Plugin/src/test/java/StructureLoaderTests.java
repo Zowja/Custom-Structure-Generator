@@ -1,7 +1,7 @@
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
-import plugin.StructureLoader;
-import plugin.structure.Structure;
+import io.github.zowja.StructureLoader;
+import io.github.zowja.structure.Structure;
 
 import java.util.Arrays;
 import java.util.List;

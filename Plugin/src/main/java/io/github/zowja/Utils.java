@@ -1,4 +1,4 @@
-package plugin;
+package io.github.zowja;
 
 import net.minecraft.server.NoiseGeneratorOctaves2;
 

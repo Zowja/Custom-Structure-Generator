@@ -1,11 +1,11 @@
-package plugin.generator;
+package io.github.zowja.generator;
 
 import org.bukkit.World;
 import org.bukkit.event.Event;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.plugin.EventExecutor;
-import plugin.CustomStructuresPlugin;
+import io.github.zowja.CustomStructuresPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
