@@ -20,7 +20,7 @@ import plugin.structure.Structure;
 public class CustomStructuresPlugin extends JavaPlugin {
 	
 	public static final Set<Structure> structures = new HashSet<>();
-	private final StructureLoader loader = new StructureLoader();
+	private final StructureLoader loader = new StructureLoader(this.getServer().getLogger());
 
 	@Override
 	public void onDisable() { }

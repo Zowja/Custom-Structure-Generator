@@ -11,7 +11,7 @@ import java.util.List;
 public class Structure {
 
 	public int random;
-	public boolean hasBiome = true, hasInitial = true, hasDeep = true, hasMeta = true;
+	public boolean hasBiome, hasInitial, hasDeep, hasMeta;
 
 	public short worldType;
 	public double topTemp, lowTemp, topHumidity, lowHumidity;

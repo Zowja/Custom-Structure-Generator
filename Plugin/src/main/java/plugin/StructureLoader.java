@@ -1,7 +1,5 @@
 package plugin;
 
-import javafx.util.Pair;
-import org.bukkit.Bukkit;
 import plugin.structure.LootChest;
 import plugin.structure.RandomNumberSet;
 import plugin.structure.Spawner;
@@ -78,6 +76,7 @@ public class StructureLoader {
 
         final Structure struct = new Structure();
         struct.random = name.hashCode();
+        lines.replaceAll(this::stripComments); // strip all comments from line endings
         lines.replaceAll(String::trim); // trim all lines
         lines.replaceAll(line -> line.replaceAll("  +", " ")); // make sure all values are separated only by one space
         String readNext = "world type"; // first property to read
@@ -87,23 +86,7 @@ public class StructureLoader {
                 continue;
             }
             int lineNum = i + 1;
-
-            final String line = this.stripComments(lines.get(i));
-
-            // handle end of the file exceptions
-            if (i == lines.size()-1) {
-                // no metadata was found and no additionals are needed, so just mark it as done
-                if (readNext.equalsIgnoreCase("metadata") && this.neededChecks == 0 && this.neededRandomsChestsSpawners == 0)
-                    this.state = "done";
-                // no additionals were found but they were not needed, so just mark it as done
-                if (readNext.equalsIgnoreCase("additionals") && this.neededChecks == 0 && this.neededRandomsChestsSpawners == 0) {
-                    this.state = "done";
-                }
-            }
-
-            // stop reading if there was an error or structure is fully read
-            if (this.state.equalsIgnoreCase("error") || this.state.equalsIgnoreCase("done"))
-                break;
+            final String line = lines.get(i);
 
             // skip empty and meaningless or commented lines
             if (this.shouldBeSkipped(line) && !readNext.equalsIgnoreCase("initial check")) continue;
@@ -149,7 +132,20 @@ public class StructureLoader {
                     this.readAdditionals(struct, name, lineNum, lines);
                     break;
             }
+
+            // stop reading if there was an error or structure is fully read
+            if (this.state.equalsIgnoreCase("error") || this.state.equalsIgnoreCase("done"))
+                break;
+
         }
+
+        // no metadata was found and no additionals are needed, so just mark it as done
+        if (readNext.equalsIgnoreCase("metadata") && this.neededChecks == 0 && this.neededRandomsChestsSpawners == 0)
+            this.state = "done";
+
+        // no additionals were found but they were not needed, so just mark it as done
+        if (readNext.equalsIgnoreCase("additionals") && this.neededChecks == 0 && this.neededRandomsChestsSpawners == 0)
+            this.state = "done";
 
         // there was an error, return null
         if (this.state.equalsIgnoreCase("error"))
@@ -611,7 +607,7 @@ public class StructureLoader {
 
     /** Removes comments from line endings */
     private String stripComments(final String line) {
-        if (line.contains("#"))
+        if (!line.startsWith("#") && line.contains("#"))
             return line.split("#")[0];
         return line;
     }
