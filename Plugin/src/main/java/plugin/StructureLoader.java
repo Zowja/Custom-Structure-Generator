@@ -293,16 +293,16 @@ public class StructureLoader {
     }
 
     private void readInitialCheck(final Structure struct, final String name, final int lineNum, final List<String> lines) {
-        int num = lineNum;
+        int checkLineNum = lineNum;
         final List<short[]> checks = new ArrayList<>();
-        while (!lines.get(num-1).isEmpty()) {
-            final String line = this.stripComments(lines.get(num-1));
+        while (!lines.get(checkLineNum-1).isEmpty()) {
+            final String line = lines.get(checkLineNum-1);
+            checkLineNum++;
             if (this.shouldBeSkipped(line)) continue; // skip commented lines
             final String[] values = line.split(" ");
             if (values.length < 4) {
                 this.warn(name, lineNum, "Initial check require at least 4 values. Found less. Ignoring check.");
                 struct.hasInitial = false;
-                num++;
                 continue;
             }
             try {
@@ -319,10 +319,8 @@ public class StructureLoader {
                 this.warn(name, lineNum, "Invalid initial check values. Ignoring check.");
                 continue;
             }
-            num++;
             this.skipLines++;
         }
-        this.skipLines--;
         if (!checks.isEmpty()) {
             struct.initialCheck = (short[][]) checks.toArray();
             struct.hasInitial = true;
