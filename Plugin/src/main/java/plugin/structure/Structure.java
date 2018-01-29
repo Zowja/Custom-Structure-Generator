@@ -42,18 +42,16 @@ public class Structure {
 	    return this.structure[x][y][z];
     }
 
-	public LootChest getNewChest() {
-		this.chests.add(new LootChest());
-		return this.chests.get(this.chests.size() - 1);
+	public void addChest(final LootChest chest) {
+		this.chests.add(chest);
 	}
 
-	public Spawner getNewSpawner() {
-		this.spawners.add(new Spawner());
-		return this.spawners.get(this.spawners.size() - 1);
+	public void addSpawner(final Spawner spawner) {
+		this.spawners.add(spawner);
 	}
 
-	public void createNewRandom(final int[] number, final int[] weight) {
-		this.randoms.add(new RandomNumberSet(weight, number));
+	public void addRandom(final RandomNumberSet random) {
+		this.randoms.add(random);
 	}
 
 	public boolean canGenerateAt(final Location loc, final long seed) {
@@ -103,9 +101,9 @@ public class Structure {
 
     private boolean deepCheck(final Location loc) {
 	    if (!this.hasDeep) return true;
-        for (int x = 0; x < this.deepCheck.length; x++) {
-            for (int y = 0; y < this.deepCheck[x].length; y++) {
-                for (int z = 0; z < this.deepCheck[x][y].length; z++) {
+        for (int x = 0; x < this.getWidth(); x++) {
+            for (int y = 0; y < this.getHeight(); y++) {
+                for (int z = 0; z < this.getLength(); z++) {
                     final Block block = loc.clone().add(x, y, z).getBlock();
                     if (this.deepCheck[x][y][z] > -1) {
                         if (block.getTypeId() != this.deepCheck[x][y][z])

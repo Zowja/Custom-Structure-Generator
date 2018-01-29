@@ -3,6 +3,7 @@ package plugin;
 import javafx.util.Pair;
 import org.bukkit.Bukkit;
 import plugin.structure.LootChest;
+import plugin.structure.RandomNumberSet;
 import plugin.structure.Spawner;
 import plugin.structure.Structure;
 
@@ -475,32 +476,25 @@ public class StructureLoader {
             // TODO: extract to separate method
             if (line.equalsIgnoreCase("random") && this.neededRandomsChestsSpawners > 0) {
                 int randomLineNum = 1;
-                final List<Short[]> randomValues = new ArrayList<>();
+                final RandomNumberSet random = new RandomNumberSet();
                 while (!lines.get(lineNum-1+randomLineNum).isEmpty()) {
                     final String randomLine = this.stripComments(lines.get(lineNum-1+randomLineNum));
                     if (!this.shouldBeSkipped(randomLine)) { // line is not commented
                         final String[] values  = randomLine.split(" ");
                         try {
-                            final Short[] randomVal = new Short[2];
-                            randomVal[0] = Short.parseShort(values[0]);
-                            randomVal[1] = values.length > 1 ? Short.parseShort(values[1]) : 1;
-                            randomValues.add(randomVal);
+                            final short number = Short.parseShort(values[0]);
+                            final short weight = values.length > 1 ? Short.parseShort(values[1]) : 1;
+                            random.addNumber(number, weight);
                         } catch (final NumberFormatException e) {
                             warn(name, lineNum+randomLineNum, "Invalid value when reading random. Skipping that value.");
                         }
                     }
                     randomLineNum++;
                 }
-                if (randomValues.isEmpty()) {
+                if (random.hasNumbers()) {
                     warn(name, lineNum, "random is empty. Ignoring it.");
                 } else {
-                    int[] weight = new int[randomValues.size()];
-                    int[] ids = new int[randomValues.size()];
-                    for (int i=0; i < randomValues.size(); i++) {
-                        ids[i] = randomValues.get(i)[0];
-                        weight[i] = randomValues.get(i)[1];
-                    }
-                    struct.createNewRandom(ids, weight);
+                    struct.addRandom(random);
                     this.neededRandomsChestsSpawners--;
                 }
                 lineNum += randomLineNum;
@@ -526,7 +520,7 @@ public class StructureLoader {
                     warn(name, lineNum, "Amount value in chest declaration is to large. Falling back to 27 (max value).");
                     amount = 27;
                 }
-                final LootChest chest = struct.getNewChest();
+                final LootChest chest = new LootChest();
                 chest.numOfLoot = amount;
                 int chestLineNum = 1;
                 while (!lines.get(lineNum-1+chestLineNum).isEmpty()) {
@@ -551,7 +545,7 @@ public class StructureLoader {
                     }
                     chestLineNum++;
                 }
-                if (chest.loot.size() == 0) {
+                if (chest.hasLoot()) {
                     warn(name, lineNum, "Chest is empty. Skipping it.");
                 } else {
                     struct.chests.add(chest);
@@ -563,7 +557,7 @@ public class StructureLoader {
             // TODO: extract to separate method
             if (line.startsWith("spawner")  && this.neededRandomsChestsSpawners > 0) {
                 int spawnerLineNum = 1;
-                final List<Pair<String, Short>> spawnerValues = new ArrayList<>();
+                final Spawner spawner = new Spawner();
                 while (!lines.get(lineNum-1+spawnerLineNum).isEmpty()) {
                     final String spawnerLine = this.stripComments(lines.get(lineNum-1+spawnerLineNum));
                     if (!this.shouldBeSkipped(spawnerLine)) { // line is not commented
@@ -571,22 +565,17 @@ public class StructureLoader {
                         try {
                             final String mobId = values[0];
                             final short weight = values.length > 1 ? Short.parseShort(values[1]) : 1;
-                            spawnerValues.add(new Pair<>(mobId, weight));
+                            spawner.addEntry(mobId, weight);
                         } catch (final NumberFormatException e) {
                             warn(name, lineNum+spawnerLineNum, "Invalid value when reading spawner entry. Skipping that entry.");
                         }
                     }
                     spawnerLineNum++;
                 }
-                if (spawnerValues.isEmpty()) {
+                if (!spawner.hasEntries()) {
                     warn(name, lineNum, "Spawner is empty. Ignoring it.");
                 } else {
-                    final Spawner spawner = struct.getNewSpawner();
-                    spawnerValues.forEach(entry -> {
-                        spawner.mobIDs.add(entry.getKey());
-                        spawner.weights.add(entry.getValue());
-                    });
-                    spawner.totalweight = spawner.weights.stream().mapToInt(Short::shortValue).sum();
+                    struct.addSpawner(spawner);
                     this.neededRandomsChestsSpawners--;
                 }
                 lineNum += spawnerLineNum;

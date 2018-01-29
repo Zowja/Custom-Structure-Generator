@@ -11,25 +11,25 @@ public class LootChest {
 
     private int totalweight;
     public short numOfLoot;
-    public List<LootItem> loot = new ArrayList<>();
+    private final List<LootItem> loot = new ArrayList<>();
 
-    public void addLoot(final short item, final short meta, final short num, final short weight) {
-        final LootItem loot = new LootItem();
-        loot.itemID = item;
-        loot.metadata = meta;
-        loot.numberInStack = num;
-        loot.weight = weight;
+    public void addLoot(final short itemId, final short meta, final short maxStackSize, final short weight) {
+        final LootItem lootItem = new LootItem(itemId, meta, maxStackSize, weight);
         this.totalweight += weight;
-        this.loot.add(loot);
+        this.loot.add(lootItem);
     }
 
     public Collection<ItemStack> getLoot(final Random rand) {
         final Collection<ItemStack> items = new ArrayList<>();
         for (int i = 0; i < this.numOfLoot; i++) {
-            final LootItem item = this.getSingleLootItem(rand);
-            items.add(new ItemStack(item.itemID, rand.nextInt(item.numberInStack) + 1, item.metadata));
+            final LootItem lootItem = this.getSingleLootItem(rand);
+            items.add(lootItem.toItemStack(rand));
         }
         return items;
+    }
+
+    public boolean hasLoot() {
+        return this.loot.isEmpty();
     }
 
     private LootItem getSingleLootItem(final Random rand) {
@@ -46,7 +46,19 @@ public class LootChest {
     }
 
     private class LootItem {
-        short itemID, metadata, numberInStack, weight;
+        short itemID, meta, maxStackSize, weight;
+
+        LootItem(final short itemID, final short meta, final short maxStackSize, final short weight) {
+            this.itemID = itemID;
+            this.meta = meta;
+            this.maxStackSize = maxStackSize;
+            this.weight = weight;
+        }
+
+        ItemStack toItemStack(final Random rand) {
+            final int amount = rand.nextInt(this.maxStackSize) + 1;
+            return new ItemStack(itemID,amount,meta);
+        }
     }
 
 }
