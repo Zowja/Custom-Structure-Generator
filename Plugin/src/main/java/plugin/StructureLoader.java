@@ -9,7 +9,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Scanner;
+import java.util.Stack;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -76,8 +83,8 @@ public class StructureLoader {
 
         final Structure struct = new Structure();
         struct.random = name.hashCode();
-        lines.replaceAll(this::stripComments); // strip all comments from line endings
         lines.replaceAll(String::trim); // trim all lines
+        lines.replaceAll(this::stripComments); // strip all comments from line endings
         lines.replaceAll(line -> line.replaceAll("  +", " ")); // make sure all values are separated only by one space
         String readNext = "world type"; // first property to read
         for (int i = 0; i < lines.size(); i++) {
@@ -298,6 +305,7 @@ public class StructureLoader {
         while (!lines.get(checkLineNum-1).isEmpty()) {
             final String line = lines.get(checkLineNum-1);
             checkLineNum++;
+            this.skipLines++;
             if (this.shouldBeSkipped(line)) continue; // skip commented lines
             final String[] values = line.split(" ");
             if (values.length < 4) {
@@ -319,7 +327,6 @@ public class StructureLoader {
                 this.warn(name, lineNum, "Invalid initial check values. Ignoring check.");
                 continue;
             }
-            this.skipLines++;
         }
         if (!checks.isEmpty()) {
             struct.initialCheck = (short[][]) checks.toArray();
@@ -337,7 +344,7 @@ public class StructureLoader {
         struct.deepCheck = struct.structure.clone();
         for (int height = 0; height < struct.deepCheck[0].length; height++) {
             for (int length = 0; length < struct.deepCheck[0][0].length; length++) {
-                final String line = this.stripComments(lines.get(lineNum-1));
+                final String line = lines.get(lineNum-1);
                 if (this.shouldBeSkipped(line)) { // skip empty and commented lines
                     length--;
                 } else {
@@ -362,13 +369,12 @@ public class StructureLoader {
                 this.skipLines++;
             }
         }
-        this.skipLines--;
     }
 
     private void readStructure(final Structure struct, final String name, int lineNum, final List<String> lines) {
         for (int height = 0; height < struct.structure[0].length; height++) {
             for (int length = 0; length < struct.structure[0][0].length; length++) {
-                final String line = this.stripComments(lines.get(lineNum-1));
+                final String line = lines.get(lineNum-1);
                 if (this.shouldBeSkipped(line)) { // skip empty and commented lines
                     length--;
                 } else {
@@ -398,10 +404,10 @@ public class StructureLoader {
     }
 
     private void readMetaData(final Structure struct, final String name, int lineNum, final List<String> lines) {
-        int num = lineNum;
+        int metaLineNum = lineNum;
         final List<short[]> checks = new ArrayList<>();
-        while (!lines.get(num-1).isEmpty()) {
-            final String line = this.stripComments(lines.get(num-1));
+        while (!lines.get(metaLineNum-1).isEmpty()) {
+            final String line = lines.get(metaLineNum-1);
             if (this.shouldBeSkipped(line)) continue; // skip commented lines
             final String[] values = line.split(" ");
             if (values.length < 4) {
@@ -418,10 +424,9 @@ public class StructureLoader {
                 this.warn(name, lineNum, "Invalid initial check values. Ignoring check.");
                 continue;
             }
-            num++;
+            metaLineNum++;
             this.skipLines++;
         }
-        this.skipLines--;
         if (!checks.isEmpty()) {
             short[][] meta = new short[checks.size()][4];
             for (int i = 0; i < checks.size(); i++) {
@@ -439,7 +444,7 @@ public class StructureLoader {
 
     private void readAdditionals(final Structure struct, final String name, int lineNum, final List<String> lines) {
         while (lines.size() - lineNum > 0 && (this.neededChecks > 0 || this.neededRandomsChestsSpawners > 0)) {
-            final String line = this.stripComments(lines.get(lineNum-1));
+            final String line = lines.get(lineNum-1);
             if (this.shouldBeSkipped(line)) { // skip empty and commented lines
                 lineNum++;
                 continue;
@@ -450,7 +455,7 @@ public class StructureLoader {
                 int checkLineNum = 1;
                 final Stack<Short> values = new Stack<>();
                 while (!lines.get(lineNum-1+checkLineNum).isEmpty()) {
-                    final String checkLine = this.stripComments(lines.get(lineNum-1+checkLineNum));
+                    final String checkLine = lines.get(lineNum-1+checkLineNum);
                     if (!this.shouldBeSkipped(checkLine)) { // line is not commented
                         try {
                             values.push(Short.parseShort(checkLine));
@@ -478,7 +483,7 @@ public class StructureLoader {
                 int randomLineNum = 1;
                 final RandomNumberSet random = new RandomNumberSet();
                 while (!lines.get(lineNum-1+randomLineNum).isEmpty()) {
-                    final String randomLine = this.stripComments(lines.get(lineNum-1+randomLineNum));
+                    final String randomLine = lines.get(lineNum-1+randomLineNum);
                     if (!this.shouldBeSkipped(randomLine)) { // line is not commented
                         final String[] values  = randomLine.split(" ");
                         try {
@@ -524,7 +529,7 @@ public class StructureLoader {
                 chest.numOfLoot = amount;
                 int chestLineNum = 1;
                 while (!lines.get(lineNum-1+chestLineNum).isEmpty()) {
-                    final String lootEntryLine = this.stripComments(lines.get(lineNum-1+chestLineNum));
+                    final String lootEntryLine = lines.get(lineNum-1+chestLineNum);
                     if (!this.shouldBeSkipped(lootEntryLine)) { // line is not commented
                         final String[] values  = lootEntryLine.split(" ");
                         if (values.length < 3) {
@@ -559,7 +564,7 @@ public class StructureLoader {
                 int spawnerLineNum = 1;
                 final Spawner spawner = new Spawner();
                 while (!lines.get(lineNum-1+spawnerLineNum).isEmpty()) {
-                    final String spawnerLine = this.stripComments(lines.get(lineNum-1+spawnerLineNum));
+                    final String spawnerLine = lines.get(lineNum-1+spawnerLineNum);
                     if (!this.shouldBeSkipped(spawnerLine)) { // line is not commented
                         final String[] values  = spawnerLine.split(" ");
                         try {
@@ -606,7 +611,7 @@ public class StructureLoader {
     /** Removes comments from line endings */
     private String stripComments(final String line) {
         if (!line.startsWith("#") && line.contains("#"))
-            return line.split("#")[0];
+            return line.split("#")[0].trim();
         return line;
     }
 
