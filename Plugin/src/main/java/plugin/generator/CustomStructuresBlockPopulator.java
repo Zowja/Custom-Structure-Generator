@@ -33,7 +33,7 @@ public class CustomStructuresBlockPopulator extends BlockPopulator {
 
             double spawnAttempts = struct.commonality;
             while (spawnAttempts > 0) {
-                double random = rand.nextDouble();
+                final double random = rand.nextDouble();
                 if (random > spawnAttempts)
                     break;
 
@@ -66,7 +66,7 @@ public class CustomStructuresBlockPopulator extends BlockPopulator {
         if (id < -31) {
             if (id > -struct.randoms.size() - 32) {
                 final RandomNumberSet randomNumSet = struct.randoms.get(-id - 32);
-                int randomId = randomNumSet.getNumber(rand);
+                final int randomId = randomNumSet.getNumber(rand);
                 this.setBlock(block, struct, randomId, rand);
             } else if (id > -struct.chests.size() - struct.randoms.size() - 32) {
                 this.generateChest(block, id, rand, struct);
@@ -78,7 +78,7 @@ public class CustomStructuresBlockPopulator extends BlockPopulator {
 
     private void setMeta(final Block origin, final Structure struct) {
         if (!struct.hasMeta) return;
-        for (short[] meta : struct.metadata)
+        for (final short[] meta : struct.metadata)
             origin.getRelative(meta[0], meta[1], meta[2]).setData((byte) meta[3]);
     }
 

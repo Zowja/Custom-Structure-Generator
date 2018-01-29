@@ -52,7 +52,7 @@ public class Structure {
 		return this.spawners.get(this.spawners.size() - 1);
 	}
 
-	public void createNewRandom(int[] number, int[] weight) {
+	public void createNewRandom(final int[] number, final int[] weight) {
 		this.randoms.add(new RandomNumberSet(weight, number));
 	}
 
@@ -123,7 +123,7 @@ public class Structure {
 
     private boolean multiCheck(final Location loc, final int checkNum) {
         final int blockId = loc.getBlock().getTypeId();
-        short[] checks = this.multiChecks.get(-checkNum - 32);
+        final short[] checks = this.multiChecks.get(-checkNum - 32);
         for (final int check : checks) {
             if (blockId != check)
                 return false;
