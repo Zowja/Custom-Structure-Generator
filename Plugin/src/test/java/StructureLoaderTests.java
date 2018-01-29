@@ -147,5 +147,4 @@ public class StructureLoaderTests {
         assertTrue(struct.randoms.get(0).hasNumbers());
     }
 
-
 }
