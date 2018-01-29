@@ -67,7 +67,7 @@ public class CustomStructuresBlockPopulator extends BlockPopulator {
             if (id > -struct.randoms.size() - 32) {
                 final RandomNumberSet randomNumSet = struct.randoms.get(-id - 32);
                 final int randomId = randomNumSet.getNumber(rand);
-                this.setBlock(block, struct, randomId, rand);
+                this.setBlock(block, struct, randomId, rand); // TODO: secure against infinite loop (when random contains itself)
             } else if (id > -struct.chests.size() - struct.randoms.size() - 32) {
                 this.generateChest(block, id, rand, struct);
             } else if (id > -struct.spawners.size() - struct.chests.size() - struct.randoms.size() - 32) {
