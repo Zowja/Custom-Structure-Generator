@@ -62,7 +62,7 @@ public class StructureLoader {
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
         while (entries.hasMoreElements()) {
             final ZipEntry entry = entries.nextElement();
-            // TODO: handle directories within zip files
+            if (entry.isDirectory()) continue;
             // TODO: improve name so it does not contains server relative path to file but only data folder relative
             //       so name should have format: zipFileName.zip/structFileName
             //                               or: zipFileName.zip/folderName/structFileName
