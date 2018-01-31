@@ -147,4 +147,23 @@ public class StructureLoaderTests {
         assertTrue(struct.randoms.get(0).hasNumbers());
     }
 
+    @Test
+    void testWorldTypeDefaultValue() {
+        final List<String> lines = Arrays.asList(
+                "0",
+                "x",
+                "10",
+                "64 128",
+                "1 1 1",
+                "",
+                "x",
+                "",
+                "1"
+        );
+        final StructureLoader loader = new StructureLoader(Logger.getLogger("test"));
+        final Structure struct = loader.loadFromLines("testStructure", lines);
+        assertNotNull(struct);
+        assertEquals(1, struct.worldType);
+    }
+
 }

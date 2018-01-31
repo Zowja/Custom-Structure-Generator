@@ -196,10 +196,15 @@ public class StructureLoader {
 
     private void readWorldType(final Structure struct, final String name, final int lineNum, final String line) {
         try {
-            struct.worldType = Short.parseShort(line);
+            final Short worldType = Short.parseShort(line);
+            if (worldType < 1 || worldType > 3) {
+                this.warn(name, lineNum, "Invalid world type. It must be 1, 2 or 3. Falling back to default 1.");
+                struct.worldType = 1;
+            } else
+                struct.worldType = worldType;
         } catch (final NumberFormatException e) {
-            this.warn(name, lineNum, "Invalid worldType. Falling back to default 0.");
-            struct.worldType = 0;
+            this.warn(name, lineNum, "Invalid world type. Falling back to default 1.");
+            struct.worldType = 1;
         }
     }
 
