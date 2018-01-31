@@ -35,6 +35,10 @@ public class StructureLoader {
     }
 
     public Collection<Structure> loadFromFile(final File file) {
+
+        final String[] nameParts = file.getName().split(File.pathSeparator);
+        if (nameParts[nameParts.length-1].startsWith("-")) return null;
+
         try {
             if (file.getName().endsWith(".zip")) {
                 return this.loadStructurePack(new ZipFile(file));
