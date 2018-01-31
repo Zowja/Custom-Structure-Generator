@@ -1,11 +1,6 @@
 package io.github.zowja;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.file.Files;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -27,15 +22,12 @@ public class CustomStructuresPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        this.saveDefaultConfig();
-        this.getConfiguration().load();
-
         this.loader = new StructureLoader(this.getServer().getLogger());
 
         this.loadStructures();
         this.getServer().getLogger().info("[CS] Loaded " + structures.size() + " Custom Structure" + (structures.size() == 1 ? "." : "s."));
 
-        this.getServer().getPluginManager().registerEvent(Event.Type.WORLD_INIT, new WorldListener(), new WorldInitEventExecutor(this), Event.Priority.High, this);
+        this.getServer().getPluginManager().registerEvent(Event.Type.WORLD_INIT, new WorldListener(), new WorldInitEventExecutor(), Event.Priority.High, this);
 
         this.getCommand("customstructures").setExecutor(new CustomStructuresCommand(this));
     }
@@ -49,33 +41,6 @@ public class CustomStructuresPlugin extends JavaPlugin {
             final Collection<Structure> loadedStructures = this.loader.loadFromFile(file);
             if (loadedStructures != null)
                 structures.addAll(loadedStructures);
-        }
-    }
-
-    private void saveDefaultConfig() {
-        final File configFile = new File(this.getDataFolder(), "config.yml");
-        if (!configFile.exists()) {
-            try {
-                final InputStream in = this.getResource("config.yml");
-                if (in == null) return;
-                Files.copy(in, configFile.toPath());
-                in.close();
-            } catch (final IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-
-    private InputStream getResource(final String filename) {
-        try {
-            final URL url = getClassLoader().getResource(filename);
-            if (url == null) return null;
-            final URLConnection connection = url.openConnection();
-            connection.setUseCaches(false);
-            return connection.getInputStream();
-        } catch (final IOException e) {
-            return null;
         }
     }
 
