@@ -1,6 +1,16 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.3'
+    }
+}
+
 apply plugin: 'java'
+apply plugin: 'org.junit.platform.gradle.plugin'
 
 group = project.property("group")
 version = project.property("version")
@@ -15,6 +25,9 @@ dependencies {
     compile 'com.github.Bukkit:Bukkit:1.7.3-R3'
     compile name: 'craftbukkit-1060' // for calculating humidity (bukkit api one is in form of unconverted noise octave)
     compile name: 'worldedit-4.6'
+
+    testCompile 'org.junit.jupiter:junit-jupiter-api:5.0.3'
+    testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.0.3'
 }
 
 processResources {

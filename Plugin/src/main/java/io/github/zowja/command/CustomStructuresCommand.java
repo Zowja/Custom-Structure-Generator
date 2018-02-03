@@ -1,9 +1,10 @@
-package plugin;
+package io.github.zowja.command;
 
 import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.regions.Region;
+import io.github.zowja.CustomStructuresPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
@@ -25,9 +26,9 @@ import java.util.List;
 public final class CustomStructuresCommand implements CommandExecutor {
 
     private final String PREFIX = ChatColor.YELLOW + "[cstruct] " + ChatColor.WHITE;
-    private final Plugin plugin;
+    private final CustomStructuresPlugin plugin;
 
-    CustomStructuresCommand(final Plugin plugin) {
+    public CustomStructuresCommand(final CustomStructuresPlugin plugin) {
         this.plugin = plugin;
     }
 
@@ -61,46 +62,35 @@ public final class CustomStructuresCommand implements CommandExecutor {
             return true;
         }
 
+        final Player player = (Player) sender;
+
         final String name = args[1];
+        final String worldType;
+        if (player.getWorld().getEnvironment().getId() == -1) worldType = "2";
+        else if (player.getWorld().getEnvironment().getId() == 1) worldType = "3";
+        else worldType = "1";
         final String triesPerChunk = args[2];
 
         // hook into WorldEdit to get selection region
-        final WorldEditPlugin we = (WorldEditPlugin) Bukkit.getServer().getPluginManager().getPlugin("WorldEdit");
-        final Player player = (Player) sender;
-        final LocalSession session = we.getSession(player);
-        final Region reg;
+        final Region region;
         try {
-            reg = session.getSelection(session.getSelectionWorld());
-        } catch (Exception e) {
-            player.sendMessage(PREFIX + "Your WordlEdit selection is empty.");
+            region = this.getSelection(player);
+        } catch (final Exception e) {
+            player.sendMessage(PREFIX + "Could not get your WorldEdit selection.");
             return true;
         }
 
         // get structure size
-        int width = reg.getWidth();
-        int height = reg.getHeight();
-        int length = reg.getLength();
+        int width = region.getWidth();
+        int height = region.getHeight();
+        int length = region.getLength();
 
         // get blocks
-        final Vector min = reg.getMinimumPoint();
-        final Vector max = reg.getMaximumPoint();
-        final ArrayList<String> blocks = new ArrayList<>();
-        final World world = player.getWorld();
-        for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
-            for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
-                String line = "";
-                for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
-                    int id = world.getBlockTypeIdAt(x,y,z);
-                    if (line.isEmpty()) line = String.valueOf(id);
-                    else line += " " + id;
-                }
-                blocks.add(line);
-            }
-        }
+        final List<String> blocks = this.getBlocksLines(region, player.getWorld());
 
         // prepare lines
         final List<String> lines = new ArrayList<>();
-        lines.add("1");
+        lines.add(worldType);
         lines.add("x");
         lines.add(triesPerChunk);
         lines.add("0 128");
@@ -114,7 +104,7 @@ public final class CustomStructuresCommand implements CommandExecutor {
         new File(plugin.getDataFolder().getPath(),"exportedStructures").mkdirs();
 
         // write lines into file located in /plugins/CustomStructures/exportedStructures
-        Path file = Paths.get(plugin.getDataFolder().getPath(), "exportedStructures", name);
+        final Path file = Paths.get(plugin.getDataFolder().getPath(), "exportedStructures", name);
         try {
             Files.write(file, lines, Charset.forName("UTF-8"));
         } catch (IOException e) {
@@ -124,6 +114,30 @@ public final class CustomStructuresCommand implements CommandExecutor {
         }
         player.sendMessage(PREFIX + "Structure successfully exported as '" + name + "'.");
         return true;
+    }
+
+    private Region getSelection(final Player player) throws Exception {
+        final WorldEditPlugin we = (WorldEditPlugin) Bukkit.getServer().getPluginManager().getPlugin("WorldEdit");
+        final LocalSession session = we.getSession(player);
+        return session.getSelection(session.getSelectionWorld());
+    }
+
+    private List<String> getBlocksLines(final Region region, final World world) {
+        final List<String> blocks = new ArrayList<>();
+        final Vector min = region.getMinimumPoint();
+        final Vector max = region.getMaximumPoint();
+        for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
+            for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
+                final StringBuilder line = new StringBuilder();
+                for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
+                    int id = world.getBlockTypeIdAt(x,y,z);
+                    if (line.length() > 0) line.append(" ");
+                    line.append(id);
+                }
+                blocks.add(line.toString().trim());
+            }
+        }
+        return blocks;
     }
 
 }
